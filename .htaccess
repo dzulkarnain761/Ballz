@@ -1,0 +1,5 @@
+RewriteEngine On
+RewriteBase /Ballz/
+
+RewriteCond %{REQUEST_URI} !^/Ballz/public/
+RewriteRule ^(.*)$ /Ballz/public/$1 [L]
