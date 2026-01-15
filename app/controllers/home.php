@@ -4,7 +4,7 @@ class Home extends Controller
 {
     public function index()
     {
-        // cout('Home Controller Loaded');
+        $menuItems = (new MenuItemModel())->getAll();   
         $this->view('homepage');
     }
 

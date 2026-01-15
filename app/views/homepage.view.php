@@ -42,7 +42,6 @@
                     <a href="#menu" class="btn btn-primary">Explore Menu</a>
                 </div>
             </div>
-            
         </section>
 
         <section id="menu" class="menu-section">

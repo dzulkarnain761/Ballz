@@ -33,12 +33,14 @@ class MenuOptionModel
         $query = "INSERT INTO menu_option_groups (menu_item_id, name, is_required, min_select, max_select, sort_order) 
                  VALUES (?, ?, ?, ?, ?, ?)";
         $this->query($query);
-        $this->bind("i", $data['menu_item_id']);
-        $this->bind("s", $data['name']);
-        $this->bind("i", $data['is_required'] ? 1 : 0);
-        $this->bind("i", $data['min_select']);
-        $this->bind("i", $data['max_select']);
-        $this->bind("i", $data['sort_order']);
+        $this->bind("isiiii", 
+            $data['menu_item_id'],
+            $data['name'],
+            $data['is_required'] ? 1 : 0,
+            $data['min_select'],
+            $data['max_select'],
+            $data['sort_order']
+        );
         return $this->execute();
     }
 
@@ -47,19 +49,23 @@ class MenuOptionModel
         $query = "UPDATE menu_option_groups SET menu_item_id = ?, name = ?, is_required = ?, min_select = ?, max_select = ?, sort_order = ? 
                  WHERE id = ?";
         $this->query($query);
-        $this->bind("i", $data['menu_item_id']);
-        $this->bind("s", $data['name']);
-        $this->bind("i", $data['is_required'] ? 1 : 0);
-        $this->bind("i", $data['min_select']);
-        $this->bind("i", $data['max_select']);
-        $this->bind("i", $data['sort_order']);
-        $this->bind("i", $id);
+        $this->bind("isiiiii", 
+            $data['menu_item_id'],
+            $data['name'],
+            $data['is_required'] ? 1 : 0,
+            $data['min_select'],
+            $data['max_select'],
+            $data['sort_order'],
+            $id
+        );
         return $this->execute();
     }
 
     public function deleteGroup($id)
     {
-        return $this->query("DELETE FROM menu_option_groups WHERE id = ?", [$id]);
+        $this->query("DELETE FROM menu_option_groups WHERE id = ?");
+        $this->bind("i", $id);
+        return $this->execute();
     }
 
     // === OPTIONS ===
@@ -82,30 +88,16 @@ class MenuOptionModel
     {
         $query = "INSERT INTO menu_options (option_group_id, name, price_modifier, is_default, sort_order) 
                  VALUES (?, ?, ?, ?, ?)";
-        $this->query($query );
-        $this->bind("i", $data['option_group_id']);
-        $this->bind("s", $data['name']);
-        $this->bind("d", $data['price_modifier']);
-        $this->bind("i", $data['is_default'] ? 1 : 0);
-        $this->bind("i", $data['sort_order']);
-        return $this->execute();
-    }
-
-    public function updateOption($id, $data)
-    {
-        $query = "UPDATE menu_options SET name = ?, price_modifier = ?, is_default = ?, sort_order = ? 
-                 WHERE id = ?";
         $this->query($query);
-        $this->bind("s", $data['name']);
-        $this->bind("d", $data['price_modifier']);
-        $this->bind("i", $data['is_default'] ? 1 : 0);
-        $this->bind("i", $data['sort_order']);
-        $this->bind("i", $id);
+        $this->bind('isdii', 
+            $data['option_group_id'],
+            $data['name'],
+            $data['price_modifier'],
+            $data['is_default'] ? 1 : 0,
+            $data['sort_order']
+        );
         return $this->execute();
     }
 
-    public function deleteOption($id)
-    {
-        return $this->query("DELETE FROM menu_options WHERE id = ?", [$id]);
-    }
+  
 }
