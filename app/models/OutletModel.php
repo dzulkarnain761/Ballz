@@ -15,6 +15,13 @@ class OutletModel
         return $this->resultSet();
     }
 
+    public function getById($id)
+    {
+        $this->query("SELECT * FROM outlets WHERE id = ?");
+        $this->bind("i", $id);
+        return $this->single();
+    }
+
     public function create($data)
     {
         $this->query("INSERT INTO outlets (code, name, address, city, state, phone, is_active) VALUES (?, ?, ?, ?, ?, ?, ?)");

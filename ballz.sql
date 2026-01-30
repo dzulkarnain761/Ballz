@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jan 13, 2026 at 04:53 AM
+-- Generation Time: Jan 30, 2026 at 12:37 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -24,22 +24,6 @@ SET time_zone = "+00:00";
 -- --------------------------------------------------------
 
 --
--- Table structure for table `auth_sessions`
---
-
-CREATE TABLE `auth_sessions` (
-  `id` bigint(20) UNSIGNED NOT NULL,
-  `user_id` bigint(20) UNSIGNED NOT NULL,
-  `access_token` varchar(512) NOT NULL,
-  `refresh_token` varchar(512) DEFAULT NULL,
-  `expires_at` datetime NOT NULL,
-  `revoked_at` datetime DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
 -- Table structure for table `menu_categories`
 --
 
@@ -55,23 +39,10 @@ CREATE TABLE `menu_categories` (
 
 INSERT INTO `menu_categories` (`id`, `name`, `description`) VALUES
 (1, 'Savory', 'Savory bite-size balls'),
-(2, 'Sweet', 'Sweet dessert balls');
-
--- --------------------------------------------------------
-
---
--- Table structure for table `menu_images`
---
-
-CREATE TABLE `menu_images` (
-  `id` bigint(20) UNSIGNED NOT NULL,
-  `menu_item_id` bigint(20) UNSIGNED NOT NULL,
-  `image_url` varchar(255) NOT NULL,
-  `alt_text` varchar(150) DEFAULT NULL,
-  `is_primary` tinyint(1) NOT NULL DEFAULT 0,
-  `sort_order` int(11) NOT NULL DEFAULT 0,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+(2, 'Sweet', 'Sweet dessert balls'),
+(6, 'Condiments', 'Extra Sauce'),
+(7, 'Limited', 'Limited time menu items'),
+(8, 'Drinks', 'Beverages');
 
 -- --------------------------------------------------------
 
@@ -85,100 +56,29 @@ CREATE TABLE `menu_items` (
   `name` varchar(150) NOT NULL,
   `description` text DEFAULT NULL,
   `price` decimal(8,2) NOT NULL,
-  `is_active` tinyint(1) NOT NULL DEFAULT 1
+  `is_active` tinyint(1) NOT NULL DEFAULT 1,
+  `img_path` varchar(30) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `menu_items`
 --
 
-INSERT INTO `menu_items` (`id`, `category_id`, `name`, `description`, `price`, `is_active`) VALUES
-(1, 1, 'Classic Cheese Bomb', 'Crispy golden ball filled with molten mozzarella and cheddar, served with marinara sauce.', 8.90, 1),
-(2, 1, 'Mac & Cheese Truffle Bites', 'Rich mac and cheese rolled into balls, panko-crusted, drizzled with truffle oil.', 10.90, 1),
-(3, 1, 'Spicy Arancini', 'Risotto balls with fiery nduja sausage and provolone, served with roasted pepper aioli.', 9.90, 1),
-(4, 1, 'Buffalo Chicken Poppers', 'Spicy shredded chicken and cream cheese balls, served with ranch dip.', 9.50, 1),
-(5, 2, 'Nutella Delight', 'Warm brioche ball injected with rich Nutella, dusted with powdered sugar.', 7.90, 1),
-(6, 2, 'Salted Caramel Crunch', 'Fried dough ball filled with salted caramel cream, topped with pretzel bits.', 8.50, 1),
-(7, 2, 'Berry Bliss Bomboloni', 'Italian doughnut hole filled with fresh berry compote and mascarpone.', 8.90, 1),
-(8, 2, 'Cinnamon Sugar Bites', 'Classic fluffy dough balls coated in cinnamon sugar, served with vanilla glaze.', 7.50, 1);
-
--- --------------------------------------------------------
-
---
--- Table structure for table `menu_options`
---
-
-CREATE TABLE `menu_options` (
-  `id` bigint(20) UNSIGNED NOT NULL,
-  `option_group_id` bigint(20) UNSIGNED NOT NULL,
-  `name` varchar(100) NOT NULL,
-  `price_modifier` decimal(8,2) NOT NULL DEFAULT 0.00,
-  `is_default` tinyint(1) NOT NULL DEFAULT 0,
-  `sort_order` int(11) NOT NULL DEFAULT 0
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `menu_options`
---
-
-INSERT INTO `menu_options` (`id`, `option_group_id`, `name`, `price_modifier`, `is_default`, `sort_order`) VALUES
-(1, 1, 'Normal', 0.00, 1, 0),
-(2, 1, 'Spicy', 0.50, 0, 0),
-(3, 1, 'Extra Spicy', 1.00, 0, 0);
-
--- --------------------------------------------------------
-
---
--- Table structure for table `menu_option_groups`
---
-
-CREATE TABLE `menu_option_groups` (
-  `id` bigint(20) UNSIGNED NOT NULL,
-  `menu_item_id` bigint(20) UNSIGNED NOT NULL,
-  `name` varchar(100) NOT NULL,
-  `is_required` tinyint(1) NOT NULL DEFAULT 0,
-  `min_select` int(11) NOT NULL DEFAULT 0,
-  `max_select` int(11) NOT NULL DEFAULT 1,
-  `sort_order` int(11) NOT NULL DEFAULT 0
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `menu_option_groups`
---
-
-INSERT INTO `menu_option_groups` (`id`, `menu_item_id`, `name`, `is_required`, `min_select`, `max_select`, `sort_order`) VALUES
-(1, 1, 'Spice Level', 1, 0, 1, 0);
-
--- --------------------------------------------------------
-
---
--- Table structure for table `oauth_accounts`
---
-
-CREATE TABLE `oauth_accounts` (
-  `id` bigint(20) UNSIGNED NOT NULL,
-  `user_id` bigint(20) UNSIGNED NOT NULL,
-  `provider_id` bigint(20) UNSIGNED NOT NULL,
-  `provider_user_id` varchar(255) NOT NULL,
-  `access_token` text NOT NULL,
-  `refresh_token` text DEFAULT NULL,
-  `token_expires_at` datetime DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `oauth_providers`
---
-
-CREATE TABLE `oauth_providers` (
-  `id` bigint(20) UNSIGNED NOT NULL,
-  `name` varchar(50) NOT NULL,
-  `issuer_url` varchar(255) DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+INSERT INTO `menu_items` (`id`, `category_id`, `name`, `description`, `price`, `is_active`, `img_path`) VALUES
+(1, 1, 'Classic Cheese Bomb', 'Crispy golden ball filled with molten mozzarella and cheddar, served with marinara sauce.', 8.90, 1, NULL),
+(2, 1, 'Mac & Cheese Truffle Bites', 'Rich mac and cheese rolled into balls, panko-crusted, drizzled with truffle oil.', 10.90, 1, NULL),
+(3, 1, 'Spicy Arancini', 'Risotto balls with fiery nduja sausage and provolone, served with roasted pepper aioli.', 9.90, 1, NULL),
+(4, 1, 'Buffalo Chicken Poppers', 'Spicy shredded chicken and cream cheese balls, served with ranch dip.', 9.50, 1, NULL),
+(5, 2, 'Nutella Delight', 'Warm brioche ball injected with rich Nutella, dusted with powdered sugar.', 7.90, 1, NULL),
+(6, 2, 'Salted Caramel Crunch', 'Fried dough ball filled with salted caramel cream, topped with pretzel bits.', 8.50, 1, NULL),
+(7, 2, 'Berry Bliss Bomboloni', 'Italian doughnut hole filled with fresh berry compote and mascarpone.', 8.90, 1, NULL),
+(8, 2, 'Cinnamon Sugar Bites', 'Classic fluffy dough balls coated in cinnamon sugar, served with vanilla glaze.', 7.50, 1, NULL),
+(10, 6, 'Hot Sauce', 'Spicy spicy sauce', 2.00, 1, NULL),
+(11, 6, 'BBQ Sauce', 'Barbeque Saucesss', 2.00, 1, NULL),
+(12, 7, 'Cheesy Volcano', 'Extra cheese burst with spicy filling', 11.90, 1, NULL),
+(13, 7, 'Korean Fire Ball', 'Korean-style spicy chicken ball', 12.50, 1, NULL),
+(14, 8, 'Iced Lemon Tea', 'Refreshing iced lemon tea', 4.50, 1, NULL),
+(15, 8, 'Chocolate Milk', 'Cold chocolate milk drink', 5.00, 1, NULL);
 
 -- --------------------------------------------------------
 
@@ -191,7 +91,6 @@ CREATE TABLE `orders` (
   `user_id` bigint(20) UNSIGNED DEFAULT NULL,
   `outlet_id` bigint(20) UNSIGNED NOT NULL,
   `order_type` enum('pickup','dine_in') NOT NULL,
-  `table_number` varchar(10) DEFAULT NULL,
   `subtotal` decimal(10,2) NOT NULL,
   `discount_total` decimal(10,2) NOT NULL DEFAULT 0.00,
   `final_total` decimal(10,2) NOT NULL,
@@ -212,19 +111,6 @@ CREATE TABLE `order_items` (
   `quantity` int(11) NOT NULL,
   `unit_price` decimal(8,2) NOT NULL,
   `total_price` decimal(10,2) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `order_item_options`
---
-
-CREATE TABLE `order_item_options` (
-  `id` bigint(20) UNSIGNED NOT NULL,
-  `order_item_id` bigint(20) UNSIGNED NOT NULL,
-  `option_name` varchar(100) NOT NULL,
-  `price_modifier` decimal(8,2) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -260,45 +146,13 @@ CREATE TABLE `outlets` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- --------------------------------------------------------
-
 --
--- Table structure for table `outlet_menu_items`
+-- Dumping data for table `outlets`
 --
 
-CREATE TABLE `outlet_menu_items` (
-  `id` bigint(20) UNSIGNED NOT NULL,
-  `outlet_id` bigint(20) UNSIGNED NOT NULL,
-  `menu_item_id` bigint(20) UNSIGNED NOT NULL,
-  `price_override` decimal(8,2) DEFAULT NULL,
-  `is_available` tinyint(1) NOT NULL DEFAULT 1
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `outlet_menu_options`
---
-
-CREATE TABLE `outlet_menu_options` (
-  `id` bigint(20) UNSIGNED NOT NULL,
-  `outlet_id` bigint(20) UNSIGNED NOT NULL,
-  `menu_option_id` bigint(20) UNSIGNED NOT NULL,
-  `price_override` decimal(8,2) DEFAULT NULL,
-  `is_available` tinyint(1) NOT NULL DEFAULT 1
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `outlet_vouchers`
---
-
-CREATE TABLE `outlet_vouchers` (
-  `id` bigint(20) UNSIGNED NOT NULL,
-  `outlet_id` bigint(20) UNSIGNED NOT NULL,
-  `voucher_id` bigint(20) UNSIGNED NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+INSERT INTO `outlets` (`id`, `code`, `name`, `address`, `city`, `state`, `latitude`, `longitude`, `phone`, `is_active`, `created_at`) VALUES
+(3, 'BALLZ-JB', 'Ballz Johor Bahru', 'Mid Valley Southkey, Johor Bahru', 'Johor Bahru', 'Johor', 1.4926590, 103.7413590, '07-5558899', 1, '2026-01-28 12:29:11'),
+(4, 'BALLZ-PEN', 'Ballz Penang', 'Gurney Plaza, George Town', 'George Town', 'Penang', 5.4378920, 100.3098810, '04-8882233', 1, '2026-01-28 12:29:11');
 
 -- --------------------------------------------------------
 
@@ -326,9 +180,30 @@ CREATE TABLE `users` (
   `name` varchar(100) NOT NULL,
   `email` varchar(150) DEFAULT NULL,
   `phone` varchar(20) DEFAULT NULL,
+  `password` varchar(100) DEFAULT NULL,
   `reward_points` int(11) NOT NULL DEFAULT 0,
   `status` enum('active','blocked') NOT NULL DEFAULT 'active',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `users`
+--
+
+INSERT INTO `users` (`id`, `name`, `email`, `phone`, `password`, `reward_points`, `status`, `created_at`) VALUES
+(1, 'Muhammad Dzulkarnain', 'dzulkarnain761@gmail.com', NULL, NULL, 0, '', '2026-01-15 05:04:19');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `user_identities`
+--
+
+CREATE TABLE `user_identities` (
+  `id` int(30) NOT NULL,
+  `user_id` int(30) NOT NULL,
+  `provider_name` enum('google','facebook') NOT NULL,
+  `provider_user_id` int(30) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -350,6 +225,14 @@ CREATE TABLE `vouchers` (
   `is_active` tinyint(1) NOT NULL DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `vouchers`
+--
+
+INSERT INTO `vouchers` (`id`, `code`, `name`, `description`, `discount_type`, `discount_value`, `min_order_amount`, `start_date`, `end_date`, `is_active`) VALUES
+(2, 'BALLZ5', 'RM5 OFF', 'Flat RM5 discount for orders above RM30', 'fixed', 5.00, 30.00, '2026-01-01', '2026-12-31', 1),
+(3, 'SWEET10', 'Sweet Lovers 10%', '10% off sweet category items', 'percentage', 10.00, NULL, '2026-01-01', '2026-06-30', 1);
+
 -- --------------------------------------------------------
 
 --
@@ -367,15 +250,16 @@ CREATE TABLE `voucher_rules` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Indexes for dumped tables
+-- Dumping data for table `voucher_rules`
 --
 
+INSERT INTO `voucher_rules` (`id`, `voucher_id`, `rule_type`, `category_id`, `required_quantity`, `required_time_start`, `required_time_end`) VALUES
+(1, 3, 'CATEGORY_QUANTITY', 2, 2, NULL, NULL),
+(2, 2, 'TIME_BASED', NULL, NULL, '15:00:00', '18:00:00');
+
 --
--- Indexes for table `auth_sessions`
+-- Indexes for dumped tables
 --
-ALTER TABLE `auth_sessions`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `fk_session_user` (`user_id`);
 
 --
 -- Indexes for table `menu_categories`
@@ -385,47 +269,11 @@ ALTER TABLE `menu_categories`
   ADD UNIQUE KEY `name` (`name`);
 
 --
--- Indexes for table `menu_images`
---
-ALTER TABLE `menu_images`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `fk_image_menu` (`menu_item_id`);
-
---
 -- Indexes for table `menu_items`
 --
 ALTER TABLE `menu_items`
   ADD PRIMARY KEY (`id`),
   ADD KEY `idx_menu_items_category` (`category_id`);
-
---
--- Indexes for table `menu_options`
---
-ALTER TABLE `menu_options`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `fk_option_group` (`option_group_id`);
-
---
--- Indexes for table `menu_option_groups`
---
-ALTER TABLE `menu_option_groups`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `fk_option_group_menu` (`menu_item_id`);
-
---
--- Indexes for table `oauth_accounts`
---
-ALTER TABLE `oauth_accounts`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `uq_provider_user` (`provider_id`,`provider_user_id`),
-  ADD KEY `fk_oauth_user` (`user_id`);
-
---
--- Indexes for table `oauth_providers`
---
-ALTER TABLE `oauth_providers`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `name` (`name`);
 
 --
 -- Indexes for table `orders`
@@ -445,13 +293,6 @@ ALTER TABLE `order_items`
   ADD KEY `fk_order_item_menu` (`menu_item_id`);
 
 --
--- Indexes for table `order_item_options`
---
-ALTER TABLE `order_item_options`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `fk_order_item_option` (`order_item_id`);
-
---
 -- Indexes for table `order_vouchers`
 --
 ALTER TABLE `order_vouchers`
@@ -467,30 +308,6 @@ ALTER TABLE `outlets`
   ADD UNIQUE KEY `code` (`code`);
 
 --
--- Indexes for table `outlet_menu_items`
---
-ALTER TABLE `outlet_menu_items`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `uq_outlet_menu` (`outlet_id`,`menu_item_id`),
-  ADD KEY `fk_outlet_menu_item` (`menu_item_id`);
-
---
--- Indexes for table `outlet_menu_options`
---
-ALTER TABLE `outlet_menu_options`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `uq_outlet_option` (`outlet_id`,`menu_option_id`),
-  ADD KEY `fk_outlet_option` (`menu_option_id`);
-
---
--- Indexes for table `outlet_vouchers`
---
-ALTER TABLE `outlet_vouchers`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `uq_outlet_voucher` (`outlet_id`,`voucher_id`),
-  ADD KEY `fk_outlet_voucher_voucher` (`voucher_id`);
-
---
 -- Indexes for table `reward_transactions`
 --
 ALTER TABLE `reward_transactions`
@@ -504,6 +321,12 @@ ALTER TABLE `reward_transactions`
 ALTER TABLE `users`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `email` (`email`);
+
+--
+-- Indexes for table `user_identities`
+--
+ALTER TABLE `user_identities`
+  ADD PRIMARY KEY (`id`);
 
 --
 -- Indexes for table `vouchers`
@@ -525,52 +348,16 @@ ALTER TABLE `voucher_rules`
 --
 
 --
--- AUTO_INCREMENT for table `auth_sessions`
---
-ALTER TABLE `auth_sessions`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
 -- AUTO_INCREMENT for table `menu_categories`
 --
 ALTER TABLE `menu_categories`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
-
---
--- AUTO_INCREMENT for table `menu_images`
---
-ALTER TABLE `menu_images`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT for table `menu_items`
 --
 ALTER TABLE `menu_items`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
-
---
--- AUTO_INCREMENT for table `menu_options`
---
-ALTER TABLE `menu_options`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
-
---
--- AUTO_INCREMENT for table `menu_option_groups`
---
-ALTER TABLE `menu_option_groups`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
-
---
--- AUTO_INCREMENT for table `oauth_accounts`
---
-ALTER TABLE `oauth_accounts`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `oauth_providers`
---
-ALTER TABLE `oauth_providers`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
 
 --
 -- AUTO_INCREMENT for table `orders`
@@ -585,12 +372,6 @@ ALTER TABLE `order_items`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `order_item_options`
---
-ALTER TABLE `order_item_options`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
 -- AUTO_INCREMENT for table `order_vouchers`
 --
 ALTER TABLE `order_vouchers`
@@ -600,25 +381,7 @@ ALTER TABLE `order_vouchers`
 -- AUTO_INCREMENT for table `outlets`
 --
 ALTER TABLE `outlets`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `outlet_menu_items`
---
-ALTER TABLE `outlet_menu_items`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `outlet_menu_options`
---
-ALTER TABLE `outlet_menu_options`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `outlet_vouchers`
---
-ALTER TABLE `outlet_vouchers`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `reward_transactions`
@@ -630,60 +393,35 @@ ALTER TABLE `reward_transactions`
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- AUTO_INCREMENT for table `user_identities`
+--
+ALTER TABLE `user_identities`
+  MODIFY `id` int(30) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `vouchers`
 --
 ALTER TABLE `vouchers`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `voucher_rules`
 --
 ALTER TABLE `voucher_rules`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- Constraints for dumped tables
 --
 
 --
--- Constraints for table `auth_sessions`
---
-ALTER TABLE `auth_sessions`
-  ADD CONSTRAINT `fk_session_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
-
---
--- Constraints for table `menu_images`
---
-ALTER TABLE `menu_images`
-  ADD CONSTRAINT `fk_image_menu` FOREIGN KEY (`menu_item_id`) REFERENCES `menu_items` (`id`) ON DELETE CASCADE;
-
---
 -- Constraints for table `menu_items`
 --
 ALTER TABLE `menu_items`
   ADD CONSTRAINT `fk_menu_category` FOREIGN KEY (`category_id`) REFERENCES `menu_categories` (`id`);
-
---
--- Constraints for table `menu_options`
---
-ALTER TABLE `menu_options`
-  ADD CONSTRAINT `fk_option_group` FOREIGN KEY (`option_group_id`) REFERENCES `menu_option_groups` (`id`) ON DELETE CASCADE;
-
---
--- Constraints for table `menu_option_groups`
---
-ALTER TABLE `menu_option_groups`
-  ADD CONSTRAINT `fk_option_group_menu` FOREIGN KEY (`menu_item_id`) REFERENCES `menu_items` (`id`) ON DELETE CASCADE;
-
---
--- Constraints for table `oauth_accounts`
---
-ALTER TABLE `oauth_accounts`
-  ADD CONSTRAINT `fk_oauth_provider` FOREIGN KEY (`provider_id`) REFERENCES `oauth_providers` (`id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `fk_oauth_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `orders`
@@ -700,38 +438,11 @@ ALTER TABLE `order_items`
   ADD CONSTRAINT `fk_order_item_order` FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`) ON DELETE CASCADE;
 
 --
--- Constraints for table `order_item_options`
---
-ALTER TABLE `order_item_options`
-  ADD CONSTRAINT `fk_order_item_option` FOREIGN KEY (`order_item_id`) REFERENCES `order_items` (`id`) ON DELETE CASCADE;
-
---
 -- Constraints for table `order_vouchers`
 --
 ALTER TABLE `order_vouchers`
   ADD CONSTRAINT `fk_order_voucher_order` FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `fk_order_voucher_voucher` FOREIGN KEY (`voucher_id`) REFERENCES `vouchers` (`id`);
-
---
--- Constraints for table `outlet_menu_items`
---
-ALTER TABLE `outlet_menu_items`
-  ADD CONSTRAINT `fk_outlet_menu_item` FOREIGN KEY (`menu_item_id`) REFERENCES `menu_items` (`id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `fk_outlet_menu_outlet` FOREIGN KEY (`outlet_id`) REFERENCES `outlets` (`id`) ON DELETE CASCADE;
-
---
--- Constraints for table `outlet_menu_options`
---
-ALTER TABLE `outlet_menu_options`
-  ADD CONSTRAINT `fk_outlet_option` FOREIGN KEY (`menu_option_id`) REFERENCES `menu_options` (`id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `fk_outlet_option_outlet` FOREIGN KEY (`outlet_id`) REFERENCES `outlets` (`id`) ON DELETE CASCADE;
-
---
--- Constraints for table `outlet_vouchers`
---
-ALTER TABLE `outlet_vouchers`
-  ADD CONSTRAINT `fk_outlet_voucher_outlet` FOREIGN KEY (`outlet_id`) REFERENCES `outlets` (`id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `fk_outlet_voucher_voucher` FOREIGN KEY (`voucher_id`) REFERENCES `vouchers` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `reward_transactions`

@@ -71,4 +71,103 @@ class UserModel
         $this->bind("i", $id);
         return $this->execute();
     }
+
+    /**
+     * Find user by OAuth provider identity
+     * 
+     * @param string $providerName Provider name (google, facebook)
+     * @param string $providerUserId User ID from the provider
+     * @return array|null User data if found
+     */
+    public function findByProviderIdentity($providerName, $providerUserId)
+    {
+        $query = "SELECT u.* FROM users u 
+                  INNER JOIN user_identities ui ON u.id = ui.user_id 
+                  WHERE ui.provider_name = ? AND ui.provider_user_id = ?";
+        $this->query($query);
+        $this->bind("ss", $providerName, $providerUserId);
+        $result = $this->resultSet();
+        return $result && count($result) > 0 ? $result[0] : null;
+    }
+
+    /**
+     * Create user identity link
+     * 
+     * @param int $userId User ID
+     * @param string $providerName Provider name (google, facebook)
+     * @param string $providerUserId User ID from the provider
+     * @return bool
+     */
+    public function createIdentity($userId, $providerName, $providerUserId)
+    {
+        $query = "INSERT INTO user_identities (user_id, provider_name, provider_user_id) VALUES (?, ?, ?)";
+        $this->query($query);
+        $this->bind("iss", $userId, $providerName, $providerUserId);
+        return $this->execute();
+    }
+
+    /**
+     * Check if user identity exists
+     * 
+     * @param string $providerName Provider name
+     * @param string $providerUserId Provider user ID
+     * @return bool
+     */
+    public function identityExists($providerName, $providerUserId)
+    {
+        $query = "SELECT id FROM user_identities WHERE provider_name = ? AND provider_user_id = ?";
+        $this->query($query);
+        $this->bind("ss", $providerName, $providerUserId);
+        $result = $this->resultSet();
+        return $result && count($result) > 0;
+    }
+
+    /**
+     * Register user from OAuth and link identity
+     * Returns existing user if email matches, otherwise creates new user
+     * 
+     * @param array $userData User data from OAuth provider
+     * @param string $providerName Provider name (google, facebook)
+     * @param string $providerUserId User ID from the provider
+     * @return array|false User data on success, false on failure
+     */
+    public function registerFromProvider($userData, $providerName, $providerUserId)
+    {
+        // Check if identity already exists
+        $existingUser = $this->findByProviderIdentity($providerName, $providerUserId);
+        if ($existingUser) {
+            return $existingUser;
+        }
+
+        // Check if user with same email exists
+        if (!empty($userData['email'])) {
+            $existingByEmail = $this->getByEmail($userData['email']);
+            if ($existingByEmail) {
+                // Link this provider to existing account
+                $this->createIdentity($existingByEmail['id'], $providerName, $providerUserId);
+                return $existingByEmail;
+            }
+        }
+
+        // Create new user
+        $query = "INSERT INTO users (name, email, phone, reward_points, status) VALUES (?, ?, ?, 0, 'active')";
+        $this->query($query);
+        $this->bind("sss", 
+            $userData['name'],
+            $userData['email'] ?? null,
+            $userData['phone'] ?? null
+        );
+
+        if (!$this->execute()) {
+            return false;
+        }
+
+        $userId = $this->getLastInsertId();
+
+        // Create identity link
+        $this->createIdentity($userId, $providerName, $providerUserId);
+
+        // Return the newly created user
+        return $this->getOne($userId);
+    }
 }

@@ -10,6 +10,8 @@ class Api
     protected $endpoint;
     protected $resourceId;
     private $requestData = [];
+    protected $apiKeyName = null;  // Name of the validated API key
+    protected $requiresApiKey = true; // Whether endpoints require API key by default
 
 
     public function __construct()
@@ -28,6 +30,7 @@ class Api
        
         $this->checkRateLimit();
         $this->parseRequest();
+        $this->validateApiKey();
     }
 
     /**
@@ -63,6 +66,114 @@ class Api
             $this->endpoint = $parts[0] ?? null;
             $this->resourceId = $parts[1] ?? null;
         }
+    }
+
+    /**
+     * Validate API key from request headers
+     * Checks Authorization header for Bearer token or X-API-Key header
+     * 
+     * @return void
+     */
+    private function validateApiKey()
+    {
+        // Check if endpoint is public (doesn't require API key)
+        if ($this->isPublicEndpoint()) {
+            return;
+        }
+
+        $apiKey = $this->extractApiKey();
+
+        if (!$apiKey) {
+            $this->sendUnauthorized('API key is required. Use Authorization: Bearer <key> or X-API-Key header.');
+        }
+
+        // Validate against configured API keys
+        $validKey = $this->findValidApiKey($apiKey);
+
+        if (!$validKey) {
+            $this->sendUnauthorized('Invalid API key.');
+        }
+
+        $this->apiKeyName = $validKey;
+    }
+
+    /*
+     * Extract API key from request headers
+     * Supports: Authorization: Bearer <key> or X-API-Key: <key>
+     * 
+     * @return string|null
+     */
+    private function extractApiKey()
+    {
+        // Check Authorization header (Bearer token)
+        $authHeader = $_SERVER['HTTP_AUTHORIZATION'] ?? $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ?? '';
+        
+        if (preg_match('/^Bearer\s+(.+)$/i', $authHeader, $matches)) {
+            return trim($matches[1]);
+        }
+
+        // Check X-API-Key header
+        if (!empty($_SERVER['HTTP_X_API_KEY'])) {
+            return trim($_SERVER['HTTP_X_API_KEY']);
+        }
+
+        // Check query parameter as fallback (less secure, but useful for testing)
+        if (!empty($_GET['api_key'])) {
+            return trim($_GET['api_key']);
+        }
+
+        return null;
+    }
+
+    /**
+     * Find and validate API key against configured keys
+     * Uses timing-safe comparison to prevent timing attacks
+     * 
+     * @param string $providedKey
+     * @return string|null Key name if valid, null otherwise
+     */
+    private function findValidApiKey($providedKey)
+    {
+        if (!defined('API_KEYS') || !is_array(API_KEYS)) {
+            return null;
+        }
+
+        foreach (API_KEYS as $keyName => $keyValue) {
+            // Use hash_equals for timing-safe comparison
+            if (hash_equals($keyValue, $providedKey)) {
+                return $keyName;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Check if current endpoint is public (no API key required)
+     * 
+     * @return bool
+     */
+    protected function isPublicEndpoint()
+    {
+        if (!$this->requiresApiKey) {
+            return true;
+        }
+
+        if (defined('API_PUBLIC_ENDPOINTS') && is_array(API_PUBLIC_ENDPOINTS)) {
+            return in_array($this->endpoint, API_PUBLIC_ENDPOINTS);
+        }
+
+        return false;
+    }
+
+    /**
+     * Get the name of the authenticated API key
+     * 
+     * @return string|null
+     */
+    protected function getApiKeyName()
+    {
+        return $this->apiKeyName;
     }
 
     /**

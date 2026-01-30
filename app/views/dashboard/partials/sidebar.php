@@ -16,11 +16,7 @@
                         <iconify-icon icon="material-symbols:fastfood-outline"></iconify-icon> Menu Items
                     </a>
                 </li>
-                <li>
-                    <a href="<?= ROOT ?>/dashboard/options" class="<?= $currentPage === 'options' ? 'active' : '' ?>">
-                        <iconify-icon icon="material-symbols:settings-input-component-outline"></iconify-icon> Item Options
-                    </a>
-                </li>
+
                 <li>
                     <a href="<?= ROOT ?>/dashboard/outlets" class="<?= $currentPage === 'outlets' ? 'active' : '' ?>">
                         <iconify-icon icon="material-symbols:storefront-outline"></iconify-icon> Outlets
@@ -36,11 +32,7 @@
                         <iconify-icon icon="material-symbols:shopping-cart-outline"></iconify-icon> Orders
                     </a>
                 </li>
-                <li>
-                    <a href="<?= ROOT ?>/dashboard/images" class="<?= $currentPage === 'images' ? 'active' : '' ?>">
-                        <iconify-icon icon="material-symbols:image-outline"></iconify-icon> Menu Images
-                    </a>
-                </li>
+
                 <li>
                     <a href="<?= ROOT ?>/dashboard/users" class="<?= $currentPage === 'users' ? 'active' : '' ?>">
                         <iconify-icon icon="material-symbols:person-outline"></iconify-icon> Customers

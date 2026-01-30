@@ -15,6 +15,23 @@ class VoucherModel
         return $this->resultSet();
     }
 
+    public function getById($id)
+    {
+        $this->query("SELECT * FROM vouchers WHERE id = ?");
+        $this->bind("i", $id);
+        return $this->single();
+    }
+
+    public function getRulesByVoucherId($voucherId)
+    {
+        $this->query("SELECT vr.*, mc.name as category_name 
+                      FROM voucher_rules vr 
+                      LEFT JOIN menu_categories mc ON vr.category_id = mc.id 
+                      WHERE vr.voucher_id = ?");
+        $this->bind("i", $voucherId);
+        return $this->resultSet();
+    }
+
     public function create($data)
     {
         $this->query("INSERT INTO vouchers (code, name, description, discount_type, discount_value, min_order_amount, start_date, end_date, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");

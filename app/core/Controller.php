@@ -7,6 +7,7 @@ class Controller
 
     public function view($name, $data = [])
     {
+        
         $viewPath = $this->viewFolder ? $this->viewFolder . '/' : '';
         $filename = "../app/views/" . $viewPath . $name . ".view.php";
 
@@ -18,7 +19,8 @@ class Controller
         } else {
             require_once "../app/views/_404.view.php";
         }
-        cout($data ?? '');
+        
+        cout(getenv('PASSWORD_ENV'));
         exit;
     }
 
