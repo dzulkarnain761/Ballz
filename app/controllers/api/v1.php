@@ -72,6 +72,9 @@ class v1 extends Api
             case 'rewards':
                 $this->getRewardsData();
                 break;
+            case 'reward-transactions':
+                $this->getRewardTransactionsData();
+                break;
             case 'users':
                 $this->getUsersData();
                 break;
@@ -110,6 +113,9 @@ class v1 extends Api
             case 'rewards':
                 $this->getReward($resourceId);
                 break;
+            case 'reward-transactions':
+                $this->getRewardTransaction($resourceId);
+                break;
             case 'users':
                 $this->getUser($resourceId);
                 break;
@@ -133,6 +139,8 @@ class v1 extends Api
             case 'users':
                 if ($subResource === 'orders') {
                     $this->getUserOrders($resourceId, $subResourceId);
+                } elseif ($subResource === 'reward-transactions') {
+                    $this->getUserRewardTransactions($resourceId, $subResourceId);
                 } else {
                     $this->sendError('Sub-resource not found', 404);
                 }
@@ -402,6 +410,230 @@ class v1 extends Api
     }
 
     /**
+     * Get all reward transactions
+     */
+    private function getRewardTransactionsData()
+    {
+        try {
+            $transactions = $this->rewardModel->getAllTransactions();
+            $this->sendResponse($transactions ?? [], 'Reward transactions retrieved successfully');
+        } catch (Exception $e) {
+            $this->sendError('Failed to retrieve reward transactions: ' . $e->getMessage(), 500);
+        }
+    }
+
+    /**
+     * Get a specific reward transaction by ID
+     * 
+     * @param int $transactionId
+     */
+    private function getRewardTransaction($transactionId)
+    {
+        try {
+            $transaction = $this->rewardModel->getTransactionById($transactionId);
+            
+            if (!$transaction) {
+                $this->sendError('Reward transaction not found', 404);
+                return;
+            }
+            
+            $this->sendResponse($transaction, 'Reward transaction retrieved successfully');
+        } catch (Exception $e) {
+            $this->sendError('Failed to retrieve reward transaction: ' . $e->getMessage(), 500);
+        }
+    }
+
+    /**
+     * GET /api/v1/users/{userId}/reward-transactions - Get user reward transactions
+     * Handles nested resource: users/{id}/reward-transactions and users/{id}/reward-transactions/{transactionId}
+     */
+    private function getUserRewardTransactions($userId, $transactionId = null)
+    {
+        try {
+            // Verify user exists
+            $user = $this->userModel->getOne($userId);
+            
+            if (!$user) {
+                $this->sendError('User not found', 404);
+                return;
+            }
+            
+            if ($transactionId) {
+                // Get specific transaction
+                $transaction = $this->rewardModel->getTransactionById($transactionId);
+                
+                if (!$transaction) {
+                    $this->sendError('Reward transaction not found', 404);
+                    return;
+                }
+                
+                // Verify transaction belongs to user
+                if ($transaction['user_id'] != $userId) {
+                    $this->sendError('Reward transaction does not belong to this user', 403);
+                    return;
+                }
+                
+                $this->sendResponse($transaction, 'Reward transaction retrieved successfully');
+            } else {
+                // Get all transactions for user
+                $transactions = $this->rewardModel->getTransactionsByUserId($userId);
+                $this->sendResponse([
+                    'user_id' => (int)$userId,
+                    'reward_points' => (int)($user['reward_points'] ?? 0),
+                    'transactions' => $transactions ?? []
+                ], 'User reward transactions retrieved successfully');
+            }
+        } catch (Exception $e) {
+            $this->sendError('Failed to retrieve user reward transactions: ' . $e->getMessage(), 500);
+        }
+    }
+
+    /**
+     * POST /api/v1/reward-transactions - Redeem reward points for a reward item
+     * 
+     * Request body:
+     * {
+     *   "user_id": 1,             (required)
+     *   "reward_item_id": 2,      (required)
+     *   "type": "redeem"          (required, must be "earn" or "redeem")
+     *   "points": 100             (required for "earn", ignored for "redeem")
+     *   "order_id": null          (optional, link to an order)
+     * }
+     * 
+     * For "redeem": points are determined by the reward item's required_points.
+     * For "earn": points must be specified in the request body.
+     */
+    private function handleCreateRewardTransaction()
+    {
+        try {
+            $data = $this->getRequestData();
+
+            // ── Validate required fields ──
+            if (empty($data['user_id'])) {
+                $this->sendError('user_id is required', 400);
+                return;
+            }
+
+            if (empty($data['type']) || !in_array($data['type'], ['earn', 'redeem'])) {
+                $this->sendError('type is required and must be "earn" or "redeem"', 400);
+                return;
+            }
+
+            // ── Validate user exists and is active ──
+            $user = $this->userModel->getOne($data['user_id']);
+            if (!$user) {
+                $this->sendError('User not found', 404);
+                return;
+            }
+            if ($user['status'] !== 'active') {
+                $this->sendError('User account is blocked', 403);
+                return;
+            }
+
+            $type = $data['type'];
+            $points = 0;
+            $rewardItem = null;
+
+            if ($type === 'redeem') {
+                // ── Redeem: reward_item_id required ──
+                if (empty($data['reward_item_id'])) {
+                    $this->sendError('reward_item_id is required for redeem transactions', 400);
+                    return;
+                }
+
+                $rewardItem = $this->rewardModel->getById($data['reward_item_id']);
+                if (!$rewardItem) {
+                    $this->sendError('Reward item not found', 404);
+                    return;
+                }
+
+                $points = (int)$rewardItem['required_points'];
+
+                // Check user has enough points
+                $currentPoints = (int)($user['reward_points'] ?? 0);
+                if ($currentPoints < $points) {
+                    $this->sendError('Insufficient reward points. Required: ' . $points . ', Available: ' . $currentPoints, 400);
+                    return;
+                }
+
+                // Deduct points from user
+                $newPoints = $currentPoints - $points;
+                $this->userModel->update($data['user_id'], [
+                    'name' => $user['name'],
+                    'email' => $user['email'],
+                    'phone' => $user['phone'],
+                    'reward_points' => $newPoints,
+                    'status' => $user['status']
+                ]);
+            } else {
+                // ── Earn: points required ──
+                if (empty($data['points']) || (int)$data['points'] < 1) {
+                    $this->sendError('points is required and must be at least 1 for earn transactions', 400);
+                    return;
+                }
+
+                $points = (int)$data['points'];
+
+                // Add points to user
+                $currentPoints = (int)($user['reward_points'] ?? 0);
+                $newPoints = $currentPoints + $points;
+                $this->userModel->update($data['user_id'], [
+                    'name' => $user['name'],
+                    'email' => $user['email'],
+                    'phone' => $user['phone'],
+                    'reward_points' => $newPoints,
+                    'status' => $user['status']
+                ]);
+            }
+
+            // ── Validate optional order_id ──
+            $orderId = $data['order_id'] ?? null;
+            if ($orderId) {
+                $order = $this->orderModel->getById($orderId);
+                if (!$order) {
+                    $this->sendError('Order not found', 404);
+                    return;
+                }
+            }
+
+            // ── Create the transaction ──
+            $transactionId = $this->rewardModel->createTransaction([
+                'user_id' => $data['user_id'],
+                'order_id' => $orderId,
+                'points' => $points,
+                'type' => $type
+            ]);
+
+            if (!$transactionId) {
+                $this->sendError('Failed to create reward transaction', 500);
+                return;
+            }
+
+            // ── Build response ──
+            $transaction = $this->rewardModel->getTransactionById($transactionId);
+            $updatedUser = $this->userModel->getOne($data['user_id']);
+
+            $response = [
+                'transaction' => $transaction,
+                'reward_points_balance' => (int)($updatedUser['reward_points'] ?? 0)
+            ];
+
+            if ($rewardItem) {
+                $response['reward_item'] = [
+                    'id' => $rewardItem['id'],
+                    'item_name' => $rewardItem['item_name'],
+                    'required_points' => $rewardItem['required_points']
+                ];
+            }
+
+            $this->sendCreated($response, 'Reward transaction created successfully');
+
+        } catch (Exception $e) {
+            $this->sendError('Failed to create reward transaction: ' . $e->getMessage(), 500);
+        }
+    }
+
+    /**
      * Get all categories with item count
      * 
      * @return array
@@ -457,6 +689,9 @@ class v1 extends Api
                 break;
             case 'orders':
                 $this->handleCreateOrder();
+                break;
+            case 'reward-transactions':
+                $this->handleCreateRewardTransaction();
                 break;
             default:
                 $this->sendError('POST method not implemented for ' . $endpoint, 501);

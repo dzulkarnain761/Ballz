@@ -633,6 +633,9 @@
                     <a href="#rewards" class="docs-nav-link">
                         <iconify-icon icon="material-symbols:star-outline-rounded"></iconify-icon> Rewards
                     </a>
+                    <a href="#reward-transactions" class="docs-nav-link">
+                        <iconify-icon icon="material-symbols:swap-vert-rounded"></iconify-icon> Reward Transactions
+                    </a>
                     <a href="#users" class="docs-nav-link">
                         <iconify-icon icon="material-symbols:person-outline-rounded"></iconify-icon> Users
                     </a>
@@ -1112,6 +1115,335 @@ X-API-Key: <span class="string">your_api_key_here</span>
 <button class="copy-btn" onclick="copyCode(this)">Copy</button>
 <span class="keyword">GET</span> <span class="url"><?= ROOT ?>/api/v1/rewards/1</span>
                         </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Reward Transactions -->
+            <section id="reward-transactions" class="docs-section">
+                <h2><iconify-icon icon="material-symbols:swap-vert-rounded"></iconify-icon> Reward Transactions</h2>
+                <p>Manage reward point transactions — earn points from orders and redeem them for reward items. <span class="auth-badge">API Key Required</span></p>
+
+                <!-- GET /reward-transactions -->
+                <div class="endpoint-card">
+                    <div class="endpoint-header" onclick="this.parentElement.classList.toggle('open')">
+                        <span class="method-badge method-get">GET</span>
+                        <span class="endpoint-path">/api/v1/reward-transactions</span>
+                        <span class="auth-badge">Auth</span>
+                        <span class="endpoint-desc">Get all reward transactions</span>
+                        <iconify-icon class="endpoint-toggle" icon="material-symbols:expand-more-rounded"></iconify-icon>
+                    </div>
+                    <div class="endpoint-body">
+                        <p>Returns a list of all reward transactions across all users, ordered by most recent first.</p>
+
+                        <h4>Example Request</h4>
+                        <div class="code-block">
+<button class="copy-btn" onclick="copyCode(this)">Copy</button>
+<span class="keyword">GET</span> <span class="url"><?= ROOT ?>/api/v1/reward-transactions</span>
+<span class="comment"># Header:</span>
+Authorization: Bearer <span class="string">your_api_key</span>
+                        </div>
+
+                        <h4>Response</h4>
+                        <div class="response-label response-success">200 OK</div>
+                        <div class="code-block">
+{
+    <span class="key">"status"</span>: <span class="string">"success"</span>,
+    <span class="key">"message"</span>: <span class="string">"Reward transactions retrieved successfully"</span>,
+    <span class="key">"code"</span>: <span class="number">200</span>,
+    <span class="key">"data"</span>: [
+        {
+            <span class="key">"id"</span>: <span class="number">1</span>,
+            <span class="key">"user_id"</span>: <span class="number">1</span>,
+            <span class="key">"order_id"</span>: <span class="number">5</span>,
+            <span class="key">"points"</span>: <span class="number">20</span>,
+            <span class="key">"type"</span>: <span class="string">"earn"</span>,
+            <span class="key">"created_at"</span>: <span class="string">"2026-02-15 12:00:00"</span>,
+            <span class="key">"user_name"</span>: <span class="string">"John Doe"</span>,
+            <span class="key">"user_email"</span>: <span class="string">"john@example.com"</span>
+        }
+    ]
+}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- GET /reward-transactions/{id} -->
+                <div class="endpoint-card">
+                    <div class="endpoint-header" onclick="this.parentElement.classList.toggle('open')">
+                        <span class="method-badge method-get">GET</span>
+                        <span class="endpoint-path">/api/v1/reward-transactions/{id}</span>
+                        <span class="auth-badge">Auth</span>
+                        <span class="endpoint-desc">Get a single transaction</span>
+                        <iconify-icon class="endpoint-toggle" icon="material-symbols:expand-more-rounded"></iconify-icon>
+                    </div>
+                    <div class="endpoint-body">
+                        <p>Returns a specific reward transaction by its ID.</p>
+
+                        <h4>Path Parameters</h4>
+                        <table class="params-table">
+                            <thead><tr><th>Param</th><th>Type</th><th>Description</th></tr></thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>id</code></td>
+                                    <td>integer</td>
+                                    <td><span class="param-required">required</span> Reward transaction ID</td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <h4>Example Request</h4>
+                        <div class="code-block">
+<button class="copy-btn" onclick="copyCode(this)">Copy</button>
+<span class="keyword">GET</span> <span class="url"><?= ROOT ?>/api/v1/reward-transactions/1</span>
+<span class="comment"># Header:</span>
+Authorization: Bearer <span class="string">your_api_key</span>
+                        </div>
+
+                        <h4>Error Response</h4>
+                        <div class="response-label response-error">404 Not Found</div>
+                        <div class="code-block">
+{
+    <span class="key">"status"</span>: <span class="string">"error"</span>,
+    <span class="key">"message"</span>: <span class="string">"Reward transaction not found"</span>,
+    <span class="key">"code"</span>: <span class="number">404</span>
+}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- GET /users/{id}/reward-transactions -->
+                <div class="endpoint-card">
+                    <div class="endpoint-header" onclick="this.parentElement.classList.toggle('open')">
+                        <span class="method-badge method-get">GET</span>
+                        <span class="endpoint-path">/api/v1/users/{id}/reward-transactions</span>
+                        <span class="auth-badge">Auth</span>
+                        <span class="endpoint-desc">Get user's transactions</span>
+                        <iconify-icon class="endpoint-toggle" icon="material-symbols:expand-more-rounded"></iconify-icon>
+                    </div>
+                    <div class="endpoint-body">
+                        <p>Returns all reward transactions for a specific user, along with their current points balance.</p>
+
+                        <h4>Path Parameters</h4>
+                        <table class="params-table">
+                            <thead><tr><th>Param</th><th>Type</th><th>Description</th></tr></thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>id</code></td>
+                                    <td>integer</td>
+                                    <td><span class="param-required">required</span> User ID</td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <h4>Example Request</h4>
+                        <div class="code-block">
+<button class="copy-btn" onclick="copyCode(this)">Copy</button>
+<span class="keyword">GET</span> <span class="url"><?= ROOT ?>/api/v1/users/1/reward-transactions</span>
+<span class="comment"># Header:</span>
+Authorization: Bearer <span class="string">your_api_key</span>
+                        </div>
+
+                        <h4>Response</h4>
+                        <div class="response-label response-success">200 OK</div>
+                        <div class="code-block">
+{
+    <span class="key">"status"</span>: <span class="string">"success"</span>,
+    <span class="key">"message"</span>: <span class="string">"User reward transactions retrieved successfully"</span>,
+    <span class="key">"code"</span>: <span class="number">200</span>,
+    <span class="key">"data"</span>: {
+        <span class="key">"user_id"</span>: <span class="number">1</span>,
+        <span class="key">"reward_points"</span>: <span class="number">150</span>,
+        <span class="key">"transactions"</span>: [
+            {
+                <span class="key">"id"</span>: <span class="number">3</span>,
+                <span class="key">"user_id"</span>: <span class="number">1</span>,
+                <span class="key">"order_id"</span>: <span class="keyword">null</span>,
+                <span class="key">"points"</span>: <span class="number">1000</span>,
+                <span class="key">"type"</span>: <span class="string">"redeem"</span>,
+                <span class="key">"created_at"</span>: <span class="string">"2026-02-15 14:00:00"</span>
+            },
+            {
+                <span class="key">"id"</span>: <span class="number">1</span>,
+                <span class="key">"user_id"</span>: <span class="number">1</span>,
+                <span class="key">"order_id"</span>: <span class="number">5</span>,
+                <span class="key">"points"</span>: <span class="number">20</span>,
+                <span class="key">"type"</span>: <span class="string">"earn"</span>,
+                <span class="key">"created_at"</span>: <span class="string">"2026-02-15 12:00:00"</span>
+            }
+        ]
+    }
+}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- GET /users/{id}/reward-transactions/{transactionId} -->
+                <div class="endpoint-card">
+                    <div class="endpoint-header" onclick="this.parentElement.classList.toggle('open')">
+                        <span class="method-badge method-get">GET</span>
+                        <span class="endpoint-path">/api/v1/users/{id}/reward-transactions/{transactionId}</span>
+                        <span class="auth-badge">Auth</span>
+                        <span class="endpoint-desc">Get specific user transaction</span>
+                        <iconify-icon class="endpoint-toggle" icon="material-symbols:expand-more-rounded"></iconify-icon>
+                    </div>
+                    <div class="endpoint-body">
+                        <p>Returns a specific reward transaction for a user. Verifies the transaction belongs to the specified user.</p>
+
+                        <h4>Path Parameters</h4>
+                        <table class="params-table">
+                            <thead><tr><th>Param</th><th>Type</th><th>Description</th></tr></thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>id</code></td>
+                                    <td>integer</td>
+                                    <td><span class="param-required">required</span> User ID</td>
+                                </tr>
+                                <tr>
+                                    <td><code>transactionId</code></td>
+                                    <td>integer</td>
+                                    <td><span class="param-required">required</span> Reward transaction ID</td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <h4>Example Request</h4>
+                        <div class="code-block">
+<button class="copy-btn" onclick="copyCode(this)">Copy</button>
+<span class="keyword">GET</span> <span class="url"><?= ROOT ?>/api/v1/users/1/reward-transactions/3</span>
+<span class="comment"># Header:</span>
+Authorization: Bearer <span class="string">your_api_key</span>
+                        </div>
+
+                        <h4>Error Responses</h4>
+                        <div class="response-label response-error">404 Not Found</div>
+                        <p>User or reward transaction not found.</p>
+                        <div class="response-label response-error">403 Forbidden</div>
+                        <p>Reward transaction does not belong to the specified user.</p>
+                    </div>
+                </div>
+
+                <!-- POST /reward-transactions -->
+                <div class="endpoint-card">
+                    <div class="endpoint-header" onclick="this.parentElement.classList.toggle('open')">
+                        <span class="method-badge method-post">POST</span>
+                        <span class="endpoint-path">/api/v1/reward-transactions</span>
+                        <span class="auth-badge">Auth</span>
+                        <span class="endpoint-desc">Create a reward transaction</span>
+                        <iconify-icon class="endpoint-toggle" icon="material-symbols:expand-more-rounded"></iconify-icon>
+                    </div>
+                    <div class="endpoint-body">
+                        <p>Creates a new reward transaction. Use <code>type: "redeem"</code> to redeem points for a reward item, or <code>type: "earn"</code> to manually award points. Note: earn transactions are created automatically when placing orders (1 point per RM1 spent).</p>
+
+                        <h4>Request Body</h4>
+                        <table class="params-table">
+                            <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>user_id</code></td>
+                                    <td>integer</td>
+                                    <td><span class="param-required">required</span> Customer's user ID</td>
+                                </tr>
+                                <tr>
+                                    <td><code>type</code></td>
+                                    <td>string</td>
+                                    <td><span class="param-required">required</span> <code>earn</code> or <code>redeem</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>reward_item_id</code></td>
+                                    <td>integer</td>
+                                    <td><span class="param-required">required for redeem</span> The reward item to redeem. Points deducted = item's <code>required_points</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>points</code></td>
+                                    <td>integer</td>
+                                    <td><span class="param-required">required for earn</span> Number of points to award (min 1). Ignored for redeem.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>order_id</code></td>
+                                    <td>integer</td>
+                                    <td><span class="param-optional">optional</span> Link the transaction to an existing order</td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <h4>Example Request (Redeem)</h4>
+                        <div class="code-block">
+<button class="copy-btn" onclick="copyCode(this)">Copy</button>
+<span class="keyword">POST</span> <span class="url"><?= ROOT ?>/api/v1/reward-transactions</span>
+<span class="comment"># Header:</span>
+Authorization: Bearer <span class="string">your_api_key</span>
+Content-Type: application/json
+
+{
+    <span class="key">"user_id"</span>: <span class="number">1</span>,
+    <span class="key">"type"</span>: <span class="string">"redeem"</span>,
+    <span class="key">"reward_item_id"</span>: <span class="number">2</span>
+}
+                        </div>
+
+                        <h4>Example Request (Earn)</h4>
+                        <div class="code-block">
+<button class="copy-btn" onclick="copyCode(this)">Copy</button>
+<span class="keyword">POST</span> <span class="url"><?= ROOT ?>/api/v1/reward-transactions</span>
+<span class="comment"># Header:</span>
+Authorization: Bearer <span class="string">your_api_key</span>
+Content-Type: application/json
+
+{
+    <span class="key">"user_id"</span>: <span class="number">1</span>,
+    <span class="key">"type"</span>: <span class="string">"earn"</span>,
+    <span class="key">"points"</span>: <span class="number">50</span>,
+    <span class="key">"order_id"</span>: <span class="number">10</span>
+}
+                        </div>
+
+                        <h4>Response (Redeem)</h4>
+                        <div class="response-label response-success">201 Created</div>
+                        <div class="code-block">
+{
+    <span class="key">"status"</span>: <span class="string">"success"</span>,
+    <span class="key">"message"</span>: <span class="string">"Reward transaction created successfully"</span>,
+    <span class="key">"code"</span>: <span class="number">201</span>,
+    <span class="key">"data"</span>: {
+        <span class="key">"transaction"</span>: {
+            <span class="key">"id"</span>: <span class="number">3</span>,
+            <span class="key">"user_id"</span>: <span class="number">1</span>,
+            <span class="key">"order_id"</span>: <span class="keyword">null</span>,
+            <span class="key">"points"</span>: <span class="number">1000</span>,
+            <span class="key">"type"</span>: <span class="string">"redeem"</span>,
+            <span class="key">"created_at"</span>: <span class="string">"2026-02-15 14:00:00"</span>,
+            <span class="key">"user_name"</span>: <span class="string">"John Doe"</span>,
+            <span class="key">"user_email"</span>: <span class="string">"john@example.com"</span>
+        },
+        <span class="key">"reward_points_balance"</span>: <span class="number">150</span>,
+        <span class="key">"reward_item"</span>: {
+            <span class="key">"id"</span>: <span class="number">2</span>,
+            <span class="key">"item_name"</span>: <span class="string">"Chocolate Milk"</span>,
+            <span class="key">"required_points"</span>: <span class="number">1000</span>
+        }
+    }
+}
+                        </div>
+
+                        <h4>Validation Rules</h4>
+                        <div class="info-box">
+                            <p>
+                                <strong>Transaction Validation</strong>
+                                &bull; User must exist and be <code>active</code> (not blocked)<br>
+                                &bull; For <code>redeem</code>: reward item must exist and user must have enough points<br>
+                                &bull; For <code>earn</code>: points must be at least 1<br>
+                                &bull; If <code>order_id</code> is provided, the order must exist
+                            </p>
+                        </div>
+
+                        <h4>Error Responses</h4>
+                        <div class="response-label response-error">400 Bad Request</div>
+                        <p>Missing or invalid fields, insufficient points.</p>
+                        <div class="response-label response-error">404 Not Found</div>
+                        <p>User, reward item, or order not found.</p>
+                        <div class="response-label response-error">403 Forbidden</div>
+                        <p>User account is blocked.</p>
                     </div>
                 </div>
             </section>
