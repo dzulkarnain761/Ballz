@@ -39,5 +39,6 @@ define('API_KEYS', [
 define('API_PUBLIC_ENDPOINTS', [
     'menu',
     'outlets',
-    'vouchers'
+    'vouchers',
+    'rewards',
 ]);

@@ -8,6 +8,8 @@ class v1 extends Api
     private $outletModel;
     private $voucherModel;
     private $userModel;
+    private $rewardModel;
+    private $orderModel;
 
     public function __construct()
     {
@@ -47,6 +49,8 @@ class v1 extends Api
         $this->outletModel = new OutletModel();
         $this->voucherModel = new VoucherModel();
         $this->userModel = new UserModel();
+        $this->rewardModel = new RewardModel();
+        $this->orderModel = new OrderModel();
     }
 
     /**
@@ -65,6 +69,12 @@ class v1 extends Api
             case 'vouchers':
                 $this->getVouchersData();
                 break;
+            case 'rewards':
+                $this->getRewardsData();
+                break;
+            case 'users':
+                $this->getUsersData();
+                break;
             default:
                 $this->sendError('Endpoint not found', 404);
         }
@@ -73,9 +83,20 @@ class v1 extends Api
     /**
      * GET /api/v1/menu/{id} - Get specific menu item
      * Returns a single menu item
+     * Also handles nested resources like /users/{id}/orders
      */
     protected function handleGet($endpoint, $resourceId)
     {
+        // Check for nested resource pattern
+        $subResource = $this->getSubResource();
+        $subResourceId = $this->getSubResourceId();
+        
+        // Handle nested resources
+        if ($subResource) {
+            $this->handleNestedGet($endpoint, $resourceId, $subResource, $subResourceId);
+            return;
+        }
+        
         switch ($endpoint) {
             case 'menu':
                 $this->getMenuItem($resourceId);
@@ -86,8 +107,38 @@ class v1 extends Api
             case 'vouchers':
                 $this->getVoucher($resourceId);
                 break;
+            case 'rewards':
+                $this->getReward($resourceId);
+                break;
+            case 'users':
+                $this->getUser($resourceId);
+                break;
             default:
                 $this->sendError('Endpoint not found', 404);
+        }
+    }
+
+    /**
+     * Handle nested resource GET requests
+     * e.g., /users/{id}/orders, /users/{id}/orders/{orderId}
+     * 
+     * @param string $endpoint Parent endpoint
+     * @param mixed $resourceId Parent resource ID
+     * @param string $subResource Nested resource name
+     * @param mixed $subResourceId Nested resource ID (optional)
+     */
+    protected function handleNestedGet($endpoint, $resourceId, $subResource, $subResourceId = null)
+    {
+        switch ($endpoint) {
+            case 'users':
+                if ($subResource === 'orders') {
+                    $this->getUserOrders($resourceId, $subResourceId);
+                } else {
+                    $this->sendError('Sub-resource not found', 404);
+                }
+                break;
+            default:
+                $this->sendError('Nested resource not supported for this endpoint', 404);
         }
     }
 
@@ -203,6 +254,150 @@ class v1 extends Api
             $this->sendResponse($voucher, 'Voucher retrieved successfully');
         } catch (Exception $e) {
             $this->sendError('Failed to retrieve voucher: ' . $e->getMessage(), 500);
+        }
+    }
+
+    /**
+     * Get all reward items data
+     */
+    private function getRewardsData()
+    {
+        try {
+            $rewards = $this->rewardModel->getAll();
+            $this->sendResponse($rewards ?? [], 'Reward items retrieved successfully');
+        } catch (Exception $e) {
+            $this->sendError('Failed to retrieve reward items: ' . $e->getMessage(), 500);
+        }
+    }
+
+    /**
+     * Get a specific reward item by ID
+     * 
+     * @param int $rewardId
+     */
+    private function getReward($rewardId)
+    {
+        try {
+            $reward = $this->rewardModel->getById($rewardId);
+            
+            if (!$reward) {
+                $this->sendError('Reward item not found', 404);
+                return;
+            }
+            
+            $this->sendResponse($reward, 'Reward item retrieved successfully');
+        } catch (Exception $e) {
+            $this->sendError('Failed to retrieve reward item: ' . $e->getMessage(), 500);
+        }
+    }
+
+    /**
+     * Get all users data
+     */
+    private function getUsersData()
+    {
+        try {
+            $users = $this->userModel->getAll();
+            
+            // Remove sensitive data
+            if ($users) {
+                foreach ($users as &$user) {
+                    unset($user['password']);
+                }
+            }
+            
+            $this->sendResponse($users ?? [], 'Users retrieved successfully');
+        } catch (Exception $e) {
+            $this->sendError('Failed to retrieve users: ' . $e->getMessage(), 500);
+        }
+    }
+
+    /**
+     * Get a specific user by ID with their orders
+     * 
+     * GET /api/v1/users/{id}
+     * Optional query params:
+     *   - include_orders=true: Include user's order history
+     *   - order_details=true: Include full order details (items, vouchers)
+     * 
+     * @param int $userId
+     */
+    private function getUser($userId)
+    {
+        try {
+            $user = $this->userModel->getOne($userId);
+            
+            if (!$user) {
+                $this->sendError('User not found', 404);
+                return;
+            }
+            
+            // Remove sensitive data
+            unset($user['password']);
+            
+            // Check if orders should be included
+            $includeOrders = $this->getQuery('include_orders', 'false') === 'true';
+            $orderDetails = $this->getQuery('order_details', 'false') === 'true';
+            
+            if ($includeOrders) {
+                if ($orderDetails) {
+                    $user['orders'] = $this->orderModel->getUserOrdersWithDetails($userId);
+                } else {
+                    $user['orders'] = $this->orderModel->getByUserId($userId);
+                }
+            }
+            
+            $this->sendResponse($user, 'User retrieved successfully');
+        } catch (Exception $e) {
+            $this->sendError('Failed to retrieve user: ' . $e->getMessage(), 500);
+        }
+    }
+
+    /**
+     * GET /api/v1/users/{userId}/orders - Get user orders
+     * This handles nested resource: users/{id}/orders
+     */
+    private function getUserOrders($userId, $orderId = null)
+    {
+        try {
+            // Verify user exists
+            $user = $this->userModel->getOne($userId);
+            
+            if (!$user) {
+                $this->sendError('User not found', 404);
+                return;
+            }
+            
+            $includeDetails = $this->getQuery('details', 'false') === 'true';
+            
+            if ($orderId) {
+                // Get specific order
+                $order = $this->orderModel->getOrderWithDetails($orderId);
+                
+                if (!$order) {
+                    $this->sendError('Order not found', 404);
+                    return;
+                }
+                
+                // Verify order belongs to user
+                if ($order['user_id'] != $userId) {
+                    $this->sendError('Order does not belong to this user', 403);
+                    return;
+                }
+                
+                $this->sendResponse($order, 'Order retrieved successfully');
+            } else {
+                // Get all orders for user
+                if ($includeDetails) {
+                    $orders = $this->orderModel->getUserOrdersWithDetails($userId);
+                } else {
+                    $orders = $this->orderModel->getByUserId($userId);
+                }
+                
+                $this->sendResponse($orders, 'User orders retrieved successfully');
+            }
+        } catch (Exception $e) {
+            $this->sendError('Failed to retrieve user orders: ' . $e->getMessage(), 500);
         }
     }
 

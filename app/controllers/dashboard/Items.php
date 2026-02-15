@@ -3,7 +3,6 @@
 class Items extends Dashboard
 {
    
-
     public function index()
     {
         $itemModel = new MenuItemModel();

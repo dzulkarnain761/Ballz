@@ -11,13 +11,18 @@ class MenuItemModel
 
     public function getAll()
     {
-        $this->query("SELECT m.*, c.name as category_name FROM menu_items m JOIN menu_categories c ON m.category_id = c.id ORDER BY m.id DESC");
+        $this->query("SELECT m.*, c.name as category_name, 
+            COALESCE(NULLIF(m.img_path, ''), 'placeholder_food.png') as img_path 
+            FROM menu_items m 
+            JOIN menu_categories c ON m.category_id = c.id 
+            ORDER BY m.id DESC");
         return $this->resultSet();
     }
 
     public function getById($id)
     {
-        $this->query("SELECT m.*, c.name as category_name FROM menu_items m JOIN menu_categories c ON m.category_id = c.id WHERE m.id = ?");
+        $this->query("SELECT m.*, c.name as category_name,
+        COALESCE(NULLIF(m.img_path, ''), 'placeholder_food.png') as img_path FROM menu_items m JOIN menu_categories c ON m.category_id = c.id WHERE m.id = ?");
         $this->bind("i", $id);
         return $this->single();
     }

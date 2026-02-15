@@ -9,6 +9,8 @@ class Api
     protected $method;
     protected $endpoint;
     protected $resourceId;
+    protected $subResource;
+    protected $subResourceId;
     private $requestData = [];
     protected $apiKeyName = null;  // Name of the validated API key
     protected $requiresApiKey = true; // Whether endpoints require API key by default
@@ -36,6 +38,7 @@ class Api
     /**
      * Parse incoming REST request
      * Extracts HTTP method, endpoint, and resource ID
+     * Supports nested resources: /api/v1/{endpoint}/{id}/{subResource}/{subId}
      */
     private function parseRequest()
     {
@@ -56,6 +59,8 @@ class Api
                 if (count($parts) >= 3 && $parts[0] === 'api') {
                     $this->endpoint = $parts[2] ?? null;
                     $this->resourceId = $parts[3] ?? null;
+                    $this->subResource = $parts[4] ?? null;
+                    $this->subResourceId = $parts[5] ?? null;
                     return;
                 }
             }
@@ -65,6 +70,8 @@ class Api
             $parts = explode('/', trim($endpoint, '/'));
             $this->endpoint = $parts[0] ?? null;
             $this->resourceId = $parts[1] ?? null;
+            $this->subResource = $parts[2] ?? null;
+            $this->subResourceId = $parts[3] ?? null;
         }
     }
 
@@ -420,6 +427,26 @@ class Api
     protected function getResourceId()
     {
         return $this->resourceId;
+    }
+
+    /**
+     * Get current sub-resource name
+     * 
+     * @return string|null
+     */
+    protected function getSubResource()
+    {
+        return $this->subResource;
+    }
+
+    /**
+     * Get current sub-resource ID
+     * 
+     * @return mixed
+     */
+    protected function getSubResourceId()
+    {
+        return $this->subResourceId;
     }
 
     /**

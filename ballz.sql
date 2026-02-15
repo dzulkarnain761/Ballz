@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jan 30, 2026 at 12:37 PM
+-- Generation Time: Feb 15, 2026 at 02:25 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -153,6 +153,26 @@ CREATE TABLE `outlets` (
 INSERT INTO `outlets` (`id`, `code`, `name`, `address`, `city`, `state`, `latitude`, `longitude`, `phone`, `is_active`, `created_at`) VALUES
 (3, 'BALLZ-JB', 'Ballz Johor Bahru', 'Mid Valley Southkey, Johor Bahru', 'Johor Bahru', 'Johor', 1.4926590, 103.7413590, '07-5558899', 1, '2026-01-28 12:29:11'),
 (4, 'BALLZ-PEN', 'Ballz Penang', 'Gurney Plaza, George Town', 'George Town', 'Penang', 5.4378920, 100.3098810, '04-8882233', 1, '2026-01-28 12:29:11');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `reward_items`
+--
+
+CREATE TABLE `reward_items` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `menu_items_id` bigint(20) UNSIGNED DEFAULT NULL,
+  `required_points` int(10) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `reward_items`
+--
+
+INSERT INTO `reward_items` (`id`, `menu_items_id`, `required_points`) VALUES
+(1, 12, 5000),
+(2, 15, 1000);
 
 -- --------------------------------------------------------
 
@@ -308,6 +328,13 @@ ALTER TABLE `outlets`
   ADD UNIQUE KEY `code` (`code`);
 
 --
+-- Indexes for table `reward_items`
+--
+ALTER TABLE `reward_items`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `fk_menu` (`menu_items_id`);
+
+--
 -- Indexes for table `reward_transactions`
 --
 ALTER TABLE `reward_transactions`
@@ -384,6 +411,12 @@ ALTER TABLE `outlets`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
+-- AUTO_INCREMENT for table `reward_items`
+--
+ALTER TABLE `reward_items`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
 -- AUTO_INCREMENT for table `reward_transactions`
 --
 ALTER TABLE `reward_transactions`
@@ -443,6 +476,12 @@ ALTER TABLE `order_items`
 ALTER TABLE `order_vouchers`
   ADD CONSTRAINT `fk_order_voucher_order` FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `fk_order_voucher_voucher` FOREIGN KEY (`voucher_id`) REFERENCES `vouchers` (`id`);
+
+--
+-- Constraints for table `reward_items`
+--
+ALTER TABLE `reward_items`
+  ADD CONSTRAINT `fk_menu` FOREIGN KEY (`menu_items_id`) REFERENCES `menu_items` (`id`);
 
 --
 -- Constraints for table `reward_transactions`

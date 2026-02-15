@@ -1,13 +1,15 @@
 <?php if (isset($_SESSION['success'])): ?>
-                <div style="background: #d4edda; color: #155724; padding: 15px; border-radius: 10px; margin-bottom: 20px;">
-                    <strong><?= $_SESSION['success']['title'] ?>!</strong> <?= $_SESSION['success']['message'] ?>
+                <div class="alert alert-success">
+                    <iconify-icon icon="material-symbols:check-circle-outline-rounded" style="font-size: 1.3rem; flex-shrink: 0;"></iconify-icon>
+                    <div><strong><?= $_SESSION['success']['title'] ?>!</strong> <?= $_SESSION['success']['message'] ?></div>
                 </div>
                 <?php unset($_SESSION['success']); ?>
             <?php endif; ?>
 
             <?php if (isset($_SESSION['error'])): ?>
-                <div style="background: #f8d7da; color: #721c24; padding: 15px; border-radius: 10px; margin-bottom: 20px;">
-                    <strong><?= $_SESSION['error']['title'] ?>!</strong> <?= $_SESSION['error']['message'] ?>
+                <div class="alert alert-error">
+                    <iconify-icon icon="material-symbols:error-outline-rounded" style="font-size: 1.3rem; flex-shrink: 0;"></iconify-icon>
+                    <div><strong><?= $_SESSION['error']['title'] ?>!</strong> <?= $_SESSION['error']['message'] ?></div>
                 </div>
                 <?php unset($_SESSION['error']); ?>
             <?php endif; ?>
