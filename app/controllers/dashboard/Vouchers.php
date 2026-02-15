@@ -38,8 +38,8 @@ class Vouchers extends Dashboard
     public function edit($id)
     {
         $this->guardGuest();
-        $voucherModel = new VoucherModel();
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $voucherModel = new VoucherModel();
             $data = [
                 'code' => $_POST['code'],
                 'name' => $_POST['name'],
@@ -57,9 +57,8 @@ class Vouchers extends Dashboard
                 $this->returnWithErr('Error', 'Failed to update voucher');
             }
         }
-        $data['voucher'] = $voucherModel->findById('vouchers', $id);
-        $data['tab'] = 'voucher_edit';
-        $this->view('dashboard/index', $data);
+        header('Location: ' . ROOT . '/dashboard/vouchers');
+        exit;
     }
 
     public function delete($id)

@@ -31,8 +31,8 @@ class Categories extends Dashboard
     public function edit($id)
     {
         $this->guardGuest();
-        $categoryModel = new CategoryModel();
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $categoryModel = new CategoryModel();
             $data = [
                 'name' => $_POST['name'],
                 'description' => $_POST['description']
@@ -43,9 +43,8 @@ class Categories extends Dashboard
                 $this->returnWithErr('Error', 'Failed to update category');
             }
         }
-        $data['category'] = $categoryModel->findById('menu_categories', $id);
-        $data['tab'] = 'category_edit';
-        $this->view('dashboard/index', $data);
+        header('Location: ' . ROOT . '/dashboard/categories');
+        exit;
     }
 
     public function delete($id)

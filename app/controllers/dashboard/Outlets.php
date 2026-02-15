@@ -37,8 +37,8 @@ class Outlets extends Dashboard
     public function edit($id)
     {
         $this->guardGuest();
-        $outletModel = new OutletModel();
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $outletModel = new OutletModel();
             $data = [
                 'code' => $_POST['code'],
                 'name' => $_POST['name'],
@@ -54,9 +54,8 @@ class Outlets extends Dashboard
                 $this->returnWithErr('Error', 'Failed to update outlet');
             }
         }
-        $data['outlet'] = $outletModel->findById('outlets', $id);
-        $data['tab'] = 'outlet_edit';
-        $this->view('dashboard/index', $data);
+        header('Location: ' . ROOT . '/dashboard/outlets');
+        exit;
     }
 
     public function delete($id)

@@ -16,6 +16,9 @@
                 </tr>
             </thead>
             <tbody>
+                <?php if (empty($orders)): ?>
+                    <tr><td colspan="7" class="empty-state">No orders found</td></tr>
+                <?php endif; ?>
                 <?php foreach ($orders as $order): ?>
                     <tr>
                         <td>#<?= $order['id'] ?></td>
@@ -36,15 +39,11 @@
                         </td>
                         <?php if (!isGuest()): ?>
                         <td>
-                            <form action="<?= ROOT ?>/dashboard/order_status/<?= $order['id'] ?>" method="POST" style="display: flex; gap: 6px; flex-wrap: wrap; align-items: center;">
-                                <select name="status" class="form-control" style="padding: 6px 10px; width: auto; font-size: 0.8rem;">
-                                    <option value="pending" <?= $order['status'] == 'pending' ? 'selected' : '' ?>>Pending</option>
-                                    <option value="paid" <?= $order['status'] == 'paid' ? 'selected' : '' ?>>Paid</option>
-                                    <option value="completed" <?= $order['status'] == 'completed' ? 'selected' : '' ?>>Completed</option>
-                                    <option value="cancelled" <?= $order['status'] == 'cancelled' ? 'selected' : '' ?>>Cancelled</option>
-                                </select>
-                                <button type="submit" class="btn btn-sm btn-primary">Update</button>
-                            </form>
+                            <div class="action-btns">
+                                <button class="btn btn-sm btn-edit" onclick="openOrderStatusModal(<?= $order['id'] ?>, '<?= $order['status'] ?>', '#<?= $order['id'] ?> - <?= htmlspecialchars(addslashes($order['user_name'] ?? 'Guest')) ?>')">
+                                    <iconify-icon icon="material-symbols:edit-outline-rounded"></iconify-icon> Status
+                                </button>
+                            </div>
                         </td>
                         <?php endif; ?>
                     </tr>
@@ -53,3 +52,44 @@
         </table>
     </div>
 </div>
+
+<?php if (!isGuest()): ?>
+<!-- Order Status Modal -->
+<div class="modal-overlay" id="orderStatusModal">
+    <div class="modal modal-sm">
+        <div class="modal-header">
+            <h3 id="orderStatusTitle">Update Order Status</h3>
+            <button class="modal-close" onclick="closeModal('orderStatusModal')">&times;</button>
+        </div>
+        <form id="orderStatusForm" method="POST">
+            <div class="modal-body">
+                <p id="orderStatusInfo" style="margin-bottom: 16px; opacity: 0.7; font-size: 0.9rem;"></p>
+                <div class="form-group">
+                    <label>Status</label>
+                    <select name="status" id="orderStatusSelect" class="form-control">
+                        <option value="pending">Pending</option>
+                        <option value="paid">Paid</option>
+                        <option value="completed">Completed</option>
+                        <option value="cancelled">Cancelled</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-cancel" onclick="closeModal('orderStatusModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary">Update Status</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function openOrderStatusModal(id, currentStatus, orderLabel) {
+    const form = document.getElementById('orderStatusForm');
+    document.getElementById('orderStatusTitle').textContent = 'Update Order Status';
+    document.getElementById('orderStatusInfo').textContent = 'Order: ' + orderLabel;
+    document.getElementById('orderStatusSelect').value = currentStatus;
+    form.action = '<?= ROOT ?>/dashboard/orders/status/' + id;
+    openModal('orderStatusModal');
+}
+</script>
+<?php endif; ?>

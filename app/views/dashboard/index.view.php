@@ -69,6 +69,28 @@
         </div>
     </div>
 
+    <!-- Global Delete Confirmation Modal -->
+    <div class="modal-overlay" id="deleteModal">
+        <div class="modal modal-sm">
+            <div class="modal-header modal-header-danger">
+                <h3>
+                    <iconify-icon icon="material-symbols:warning-outline-rounded"></iconify-icon>
+                    Confirm Delete
+                </h3>
+                <button class="modal-close" onclick="closeModal('deleteModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p id="deleteModalMessage">Are you sure you want to delete this item? This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-cancel" onclick="closeModal('deleteModal')">Cancel</button>
+                <a href="#" class="btn btn-delete-confirm" id="confirmDeleteBtn">
+                    <iconify-icon icon="material-symbols:delete-outline-rounded"></iconify-icon> Delete
+                </a>
+            </div>
+        </div>
+    </div>
+
     <script src="<?= ROOT ?>/public/js/main.js"></script>
 </body>
 </html>

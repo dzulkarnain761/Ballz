@@ -36,9 +36,8 @@ class Items extends Dashboard
     public function edit($id)
     {
         $this->guardGuest();
-        $itemModel = new MenuItemModel();
-        $categoryModel = new CategoryModel();
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $itemModel = new MenuItemModel();
             $data = [
                 'category_id' => $_POST['category_id'],
                 'name' => $_POST['name'],
@@ -52,10 +51,8 @@ class Items extends Dashboard
                 $this->returnWithErr('Error', 'Failed to update item');
             }
         }
-        $data['item'] = $itemModel->findById('menu_items', $id);
-        $data['categories'] = $categoryModel->getAll();
-        $data['tab'] = 'item_edit';
-        $this->view('dashboard/index', $data);
+        header('Location: ' . ROOT . '/dashboard/items');
+        exit;
     }
 
     public function delete($id)

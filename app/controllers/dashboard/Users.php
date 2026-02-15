@@ -35,8 +35,8 @@ class Users extends Dashboard
     public function edit($id)
     {
         $this->guardGuest();
-        $userModel = new UserModel();
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $userModel = new UserModel();
             $data = [
                 'name' => $_POST['name'],
                 'email' => $_POST['email'],
@@ -50,9 +50,8 @@ class Users extends Dashboard
                 $this->returnWithErr('Error', 'Failed to update customer');
             }
         }
-        $data['user'] = $userModel->findById('users', $id);
-        $data['tab'] = 'user_edit';
-        $this->view('dashboard/index', $data);
+        header('Location: ' . ROOT . '/dashboard/users');
+        exit;
     }
 
     public function delete($id)
