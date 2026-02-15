@@ -65,7 +65,7 @@
             </tbody>
         </table>
     </div>
-    <?php include 'partials/pagination.php'; ?>
+    <?php include 'pagination.php'; ?>
 </div>
 
 <?php if (!isGuest()): ?>
