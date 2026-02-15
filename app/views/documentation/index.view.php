@@ -622,7 +622,7 @@
                 <div class="docs-nav-group">
                     <div class="docs-nav-group-title">Endpoints</div>
                     <a href="#menu" class="docs-nav-link">
-                        <iconify-icon icon="material-symbols:restaurant-menu-rounded"></iconify-icon> Menu
+                        <iconify-icon icon="material-symbols:restaurant-rounded"></iconify-icon> Menu
                     </a>
                     <a href="#outlets" class="docs-nav-link">
                         <iconify-icon icon="material-symbols:storefront-outline-rounded"></iconify-icon> Outlets
@@ -635,6 +635,9 @@
                     </a>
                     <a href="#users" class="docs-nav-link">
                         <iconify-icon icon="material-symbols:person-outline-rounded"></iconify-icon> Users
+                    </a>
+                    <a href="#orders" class="docs-nav-link">
+                        <iconify-icon icon="material-symbols:receipt-long-outline-rounded"></iconify-icon> Orders
                     </a>
                     <a href="#auth-endpoint" class="docs-nav-link">
                         <iconify-icon icon="material-symbols:login-rounded"></iconify-icon> Auth
@@ -830,7 +833,7 @@ X-API-Key: <span class="string">your_api_key_here</span>
 
             <!-- Menu -->
             <section id="menu" class="docs-section">
-                <h2><iconify-icon icon="material-symbols:restaurant-menu-rounded"></iconify-icon> Menu</h2>
+                <h2><iconify-icon icon="material-symbols:restaurant-rounded"></iconify-icon> Menu</h2>
                 <p>Access the complete restaurant menu including all items and categories.</p>
 
                 <!-- GET /menu -->
@@ -1282,6 +1285,145 @@ Authorization: Bearer <span class="string">your_api_key</span>
                         <p>User or order not found.</p>
                         <div class="response-label response-error">403 Forbidden</div>
                         <p>Order does not belong to the specified user.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Orders -->
+            <section id="orders" class="docs-section">
+                <h2><iconify-icon icon="material-symbols:receipt-long-outline-rounded"></iconify-icon> Orders</h2>
+                <p>Create and manage customer orders. <span class="auth-badge">API Key Required</span></p>
+
+                <!-- POST /orders -->
+                <div class="endpoint-card">
+                    <div class="endpoint-header" onclick="this.parentElement.classList.toggle('open')">
+                        <span class="method-badge method-post">POST</span>
+                        <span class="endpoint-path">/api/v1/orders</span>
+                        <span class="auth-badge">Auth</span>
+                        <span class="endpoint-desc">Create an order</span>
+                        <iconify-icon class="endpoint-toggle" icon="material-symbols:expand-more-rounded"></iconify-icon>
+                    </div>
+                    <div class="endpoint-body">
+                        <p>Creates a new order with items and optional vouchers. The server calculates all totals from menu item prices — client-submitted prices are ignored for security. Reward points are automatically awarded (1 point per RM1 spent).</p>
+
+                        <h4>Request Body</h4>
+                        <table class="params-table">
+                            <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>user_id</code></td>
+                                    <td>integer</td>
+                                    <td><span class="param-required">required</span> Customer's user ID</td>
+                                </tr>
+                                <tr>
+                                    <td><code>outlet_id</code></td>
+                                    <td>integer</td>
+                                    <td><span class="param-required">required</span> Outlet ID to place the order at</td>
+                                </tr>
+                                <tr>
+                                    <td><code>order_type</code></td>
+                                    <td>string</td>
+                                    <td><span class="param-required">required</span> <code>pickup</code> or <code>dine_in</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>items</code></td>
+                                    <td>array</td>
+                                    <td><span class="param-required">required</span> Array of order items (min 1). Each item: <code>{ "menu_item_id": int, "quantity": int }</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>voucher_codes</code></td>
+                                    <td>array</td>
+                                    <td><span class="param-optional">optional</span> Array of voucher code strings to apply</td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <h4>Example Request</h4>
+                        <div class="code-block">
+<button class="copy-btn" onclick="copyCode(this)">Copy</button>
+<span class="keyword">POST</span> <span class="url"><?= ROOT ?>/api/v1/orders</span>
+<span class="comment"># Header:</span>
+Authorization: Bearer <span class="string">your_api_key</span>
+Content-Type: application/json
+
+{
+    <span class="key">"user_id"</span>: <span class="number">1</span>,
+    <span class="key">"outlet_id"</span>: <span class="number">3</span>,
+    <span class="key">"order_type"</span>: <span class="string">"pickup"</span>,
+    <span class="key">"items"</span>: [
+        { <span class="key">"menu_item_id"</span>: <span class="number">1</span>, <span class="key">"quantity"</span>: <span class="number">2</span> },
+        { <span class="key">"menu_item_id"</span>: <span class="number">5</span>, <span class="key">"quantity"</span>: <span class="number">1</span> }
+    ],
+    <span class="key">"voucher_codes"</span>: [<span class="string">"BALLZ5"</span>]
+}
+                        </div>
+
+                        <h4>Response</h4>
+                        <div class="response-label response-success">201 Created</div>
+                        <div class="code-block">
+{
+    <span class="key">"status"</span>: <span class="string">"success"</span>,
+    <span class="key">"message"</span>: <span class="string">"Order created successfully"</span>,
+    <span class="key">"code"</span>: <span class="number">201</span>,
+    <span class="key">"timestamp"</span>: <span class="string">"2026-02-15 12:00:00"</span>,
+    <span class="key">"data"</span>: {
+        <span class="key">"id"</span>: <span class="number">1</span>,
+        <span class="key">"user_id"</span>: <span class="number">1</span>,
+        <span class="key">"outlet_id"</span>: <span class="number">3</span>,
+        <span class="key">"outlet_name"</span>: <span class="string">"Ballz Johor Bahru"</span>,
+        <span class="key">"order_type"</span>: <span class="string">"pickup"</span>,
+        <span class="key">"subtotal"</span>: <span class="number">25.70</span>,
+        <span class="key">"discount_total"</span>: <span class="number">5.00</span>,
+        <span class="key">"final_total"</span>: <span class="number">20.70</span>,
+        <span class="key">"status"</span>: <span class="string">"pending"</span>,
+        <span class="key">"items"</span>: [
+            {
+                <span class="key">"menu_item_id"</span>: <span class="number">1</span>,
+                <span class="key">"item_name"</span>: <span class="string">"Classic Cheese Bomb"</span>,
+                <span class="key">"quantity"</span>: <span class="number">2</span>,
+                <span class="key">"unit_price"</span>: <span class="number">8.90</span>,
+                <span class="key">"total_price"</span>: <span class="number">17.80</span>
+            },
+            {
+                <span class="key">"menu_item_id"</span>: <span class="number">5</span>,
+                <span class="key">"item_name"</span>: <span class="string">"Nutella Delight"</span>,
+                <span class="key">"quantity"</span>: <span class="number">1</span>,
+                <span class="key">"unit_price"</span>: <span class="number">7.90</span>,
+                <span class="key">"total_price"</span>: <span class="number">7.90</span>
+            }
+        ],
+        <span class="key">"vouchers"</span>: [
+            {
+                <span class="key">"voucher_code"</span>: <span class="string">"BALLZ5"</span>,
+                <span class="key">"voucher_name"</span>: <span class="string">"RM5 OFF"</span>,
+                <span class="key">"discount_applied"</span>: <span class="number">5.00</span>
+            }
+        ],
+        <span class="key">"points_earned"</span>: <span class="number">20</span>
+    }
+}
+                        </div>
+
+                        <h4>Validation Rules</h4>
+                        <div class="info-box">
+                            <p>
+                                <strong>Order Validation</strong>
+                                &bull; User must exist and be <code>active</code> (not blocked)<br>
+                                &bull; Outlet must exist and be active<br>
+                                &bull; Each menu item must exist and be active<br>
+                                &bull; Item quantity must be at least 1<br>
+                                &bull; Vouchers must be active, within validity dates, and meet minimum order amount<br>
+                                &bull; Total discount cannot exceed the subtotal
+                            </p>
+                        </div>
+
+                        <h4>Error Responses</h4>
+                        <div class="response-label response-error">400 Bad Request</div>
+                        <p>Missing or invalid fields, inactive items/outlets, voucher validation failures.</p>
+                        <div class="response-label response-error">404 Not Found</div>
+                        <p>User, outlet, or menu item not found.</p>
+                        <div class="response-label response-error">403 Forbidden</div>
+                        <p>User account is blocked.</p>
                     </div>
                 </div>
             </section>

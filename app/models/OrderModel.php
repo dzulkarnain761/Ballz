@@ -156,4 +156,90 @@ class OrderModel
 
         return $orders;
     }
+
+    /**
+     * Create a new order
+     * 
+     * @param array $data Order data (user_id, outlet_id, order_type, subtotal, discount_total, final_total, status)
+     * @return int|false The new order ID or false on failure
+     */
+    public function create($data)
+    {
+        $this->query("INSERT INTO orders (user_id, outlet_id, order_type, subtotal, discount_total, final_total, status) 
+                      VALUES (?, ?, ?, ?, ?, ?, ?)");
+        $this->bind(
+            "iisddds",
+            $data['user_id'],
+            $data['outlet_id'],
+            $data['order_type'],
+            $data['subtotal'],
+            $data['discount_total'],
+            $data['final_total'],
+            $data['status']
+        );
+        if ($this->execute()) {
+            return $this->getLastInsertId();
+        }
+        return false;
+    }
+
+    /**
+     * Add an item to an order
+     * 
+     * @param array $data (order_id, menu_item_id, quantity, unit_price, total_price)
+     * @return bool
+     */
+    public function addOrderItem($data)
+    {
+        $this->query("INSERT INTO order_items (order_id, menu_item_id, quantity, unit_price, total_price) 
+                      VALUES (?, ?, ?, ?, ?)");
+        $this->bind(
+            "iiidd",
+            $data['order_id'],
+            $data['menu_item_id'],
+            $data['quantity'],
+            $data['unit_price'],
+            $data['total_price']
+        );
+        return $this->execute();
+    }
+
+    /**
+     * Add a voucher to an order
+     * 
+     * @param array $data (order_id, voucher_id, discount_applied)
+     * @return bool
+     */
+    public function addOrderVoucher($data)
+    {
+        $this->query("INSERT INTO order_vouchers (order_id, voucher_id, discount_applied) 
+                      VALUES (?, ?, ?)");
+        $this->bind(
+            "iid",
+            $data['order_id'],
+            $data['voucher_id'],
+            $data['discount_applied']
+        );
+        return $this->execute();
+    }
+
+    /**
+     * Add a reward transaction
+     * 
+     * @param array $data (user_id, order_id, points, type)
+     * @return bool
+     */
+    public function addRewardTransaction($data)
+    {
+        $this->query("INSERT INTO reward_transactions (user_id, order_id, points, type) 
+                      VALUES (?, ?, ?, ?)");
+        $this->bind(
+            "iiis",
+            $data['user_id'],
+            $data['order_id'],
+            $data['points'],
+            $data['type']
+        );
+        return $this->execute();
+    }
 }

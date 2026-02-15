@@ -65,4 +65,69 @@ class VoucherModel
     {
         return $this->deleteById('vouchers', $id);
     }
+
+    /**
+     * Get a voucher by its code
+     * 
+     * @param string $code
+     * @return array|null
+     */
+    public function getByCode($code)
+    {
+        $this->query("SELECT * FROM vouchers WHERE code = ?");
+        $this->bind("s", $code);
+        return $this->single();
+    }
+
+    /**
+     * Validate a voucher for use in an order
+     * Checks: exists, active, within date range, meets min order amount
+     * 
+     * @param string $code Voucher code
+     * @param float $subtotal Order subtotal
+     * @return array ['valid' => bool, 'voucher' => array|null, 'error' => string|null]
+     */
+    public function validateForOrder($code, $subtotal)
+    {
+        $voucher = $this->getByCode($code);
+
+        if (!$voucher) {
+            return ['valid' => false, 'voucher' => null, 'error' => 'Voucher not found'];
+        }
+
+        if (!$voucher['is_active']) {
+            return ['valid' => false, 'voucher' => $voucher, 'error' => 'Voucher is inactive'];
+        }
+
+        $today = date('Y-m-d');
+        if ($voucher['start_date'] && $today < $voucher['start_date']) {
+            return ['valid' => false, 'voucher' => $voucher, 'error' => 'Voucher is not yet valid'];
+        }
+        if ($voucher['end_date'] && $today > $voucher['end_date']) {
+            return ['valid' => false, 'voucher' => $voucher, 'error' => 'Voucher has expired'];
+        }
+
+        if ($voucher['min_order_amount'] && $subtotal < $voucher['min_order_amount']) {
+            return ['valid' => false, 'voucher' => $voucher, 'error' => 'Minimum order amount of RM' . number_format($voucher['min_order_amount'], 2) . ' not met'];
+        }
+
+        return ['valid' => true, 'voucher' => $voucher, 'error' => null];
+    }
+
+    /**
+     * Calculate the discount amount for a voucher given a subtotal
+     * 
+     * @param array $voucher
+     * @param float $subtotal
+     * @return float
+     */
+    public function calculateDiscount($voucher, $subtotal)
+    {
+        if ($voucher['discount_type'] === 'fixed') {
+            return min($voucher['discount_value'], $subtotal);
+        } elseif ($voucher['discount_type'] === 'percentage') {
+            return round($subtotal * ($voucher['discount_value'] / 100), 2);
+        }
+        return 0;
+    }
 }

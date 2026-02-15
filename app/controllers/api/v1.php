@@ -455,6 +455,9 @@ class v1 extends Api
             case 'auth':
                 $this->handleAuthCheck();
                 break;
+            case 'orders':
+                $this->handleCreateOrder();
+                break;
             default:
                 $this->sendError('POST method not implemented for ' . $endpoint, 501);
         }
@@ -533,10 +536,229 @@ class v1 extends Api
 
             $newUser['is_new_user'] = true;
             unset($newUser['password']); // Remove sensitive data
-            $this->sendResponse($newUser, 'User registered successfully', 201);
+            $this->sendCreated($newUser, 'User registered successfully');
 
         } catch (Exception $e) {
             $this->sendError('Authentication failed: ' . $e->getMessage(), 500);
+        }
+    }
+
+    /**
+     * POST /api/v1/orders - Create a new order
+     * 
+     * Request body:
+     * {
+     *   "user_id": 1,                          (required)
+     *   "outlet_id": 3,                         (required)
+     *   "order_type": "pickup" | "dine_in",     (required)
+     *   "items": [                              (required, min 1)
+     *     {
+     *       "menu_item_id": 1,
+     *       "quantity": 2
+     *     }
+     *   ],
+     *   "voucher_codes": ["BALLZ5"]             (optional, array of voucher codes)
+     * }
+     * 
+     * Response: Full order details including calculated totals and applied vouchers
+     */
+    private function handleCreateOrder()
+    {
+        try {
+            $data = $this->getRequestData();
+
+            // ── Validate required fields ──
+            if (empty($data['user_id'])) {
+                $this->sendError('user_id is required', 400);
+                return;
+            }
+            if (empty($data['outlet_id'])) {
+                $this->sendError('outlet_id is required', 400);
+                return;
+            }
+            if (empty($data['order_type']) || !in_array($data['order_type'], ['pickup', 'dine_in'])) {
+                $this->sendError('order_type is required and must be "pickup" or "dine_in"', 400);
+                return;
+            }
+            if (empty($data['items']) || !is_array($data['items']) || count($data['items']) === 0) {
+                $this->sendError('items is required and must be a non-empty array', 400);
+                return;
+            }
+
+            // ── Validate user exists ──
+            $user = $this->userModel->getOne($data['user_id']);
+            if (!$user) {
+                $this->sendError('User not found', 404);
+                return;
+            }
+            if ($user['status'] !== 'active') {
+                $this->sendError('User account is blocked', 403);
+                return;
+            }
+
+            // ── Validate outlet exists and is active ──
+            $outlet = $this->outletModel->getById($data['outlet_id']);
+            if (!$outlet) {
+                $this->sendError('Outlet not found', 404);
+                return;
+            }
+            if (!$outlet['is_active']) {
+                $this->sendError('Outlet is not active', 400);
+                return;
+            }
+
+            // ── Validate & resolve order items ──
+            $orderItems = [];
+            $subtotal = 0;
+
+            foreach ($data['items'] as $index => $item) {
+                if (empty($item['menu_item_id'])) {
+                    $this->sendError("items[$index].menu_item_id is required", 400);
+                    return;
+                }
+                if (empty($item['quantity']) || $item['quantity'] < 1) {
+                    $this->sendError("items[$index].quantity must be at least 1", 400);
+                    return;
+                }
+
+                $menuItem = $this->itemModel->getById($item['menu_item_id']);
+                if (!$menuItem) {
+                    $this->sendError("Menu item with ID {$item['menu_item_id']} not found", 404);
+                    return;
+                }
+                if (!$menuItem['is_active']) {
+                    $this->sendError("Menu item '{$menuItem['name']}' is currently unavailable", 400);
+                    return;
+                }
+
+                $quantity = (int)$item['quantity'];
+                $unitPrice = (float)$menuItem['price'];
+                $totalPrice = round($unitPrice * $quantity, 2);
+
+                $orderItems[] = [
+                    'menu_item_id' => $menuItem['id'],
+                    'quantity' => $quantity,
+                    'unit_price' => $unitPrice,
+                    'total_price' => $totalPrice,
+                    'item_name' => $menuItem['name']
+                ];
+
+                $subtotal += $totalPrice;
+            }
+
+            $subtotal = round($subtotal, 2);
+
+            // ── Validate & apply vouchers ──
+            $discountTotal = 0;
+            $appliedVouchers = [];
+            $voucherCodes = $data['voucher_codes'] ?? [];
+
+            if (!empty($voucherCodes) && is_array($voucherCodes)) {
+                // Prevent duplicate voucher codes
+                $voucherCodes = array_unique($voucherCodes);
+
+                foreach ($voucherCodes as $code) {
+                    $validation = $this->voucherModel->validateForOrder($code, $subtotal);
+
+                    if (!$validation['valid']) {
+                        $this->sendError("Voucher '$code': " . $validation['error'], 400);
+                        return;
+                    }
+
+                    $voucher = $validation['voucher'];
+                    $discount = $this->voucherModel->calculateDiscount($voucher, $subtotal);
+
+                    $appliedVouchers[] = [
+                        'voucher_id' => $voucher['id'],
+                        'code' => $voucher['code'],
+                        'name' => $voucher['name'],
+                        'discount_type' => $voucher['discount_type'],
+                        'discount_value' => $voucher['discount_value'],
+                        'discount_applied' => $discount
+                    ];
+
+                    $discountTotal += $discount;
+                }
+            }
+
+            $discountTotal = round(min($discountTotal, $subtotal), 2); // discount cannot exceed subtotal
+            $finalTotal = round($subtotal - $discountTotal, 2);
+
+            // ── Create the order ──
+            $orderId = $this->orderModel->create([
+                'user_id' => $data['user_id'],
+                'outlet_id' => $data['outlet_id'],
+                'order_type' => $data['order_type'],
+                'subtotal' => $subtotal,
+                'discount_total' => $discountTotal,
+                'final_total' => $finalTotal,
+                'status' => 'pending'
+            ]);
+
+            if (!$orderId) {
+                $this->sendError('Failed to create order', 500);
+                return;
+            }
+
+            // ── Insert order items ──
+            foreach ($orderItems as $oi) {
+                $success = $this->orderModel->addOrderItem([
+                    'order_id' => $orderId,
+                    'menu_item_id' => $oi['menu_item_id'],
+                    'quantity' => $oi['quantity'],
+                    'unit_price' => $oi['unit_price'],
+                    'total_price' => $oi['total_price']
+                ]);
+
+                if (!$success) {
+                    $this->sendError('Failed to add item to order', 500);
+                    return;
+                }
+            }
+
+            // ── Insert order vouchers ──
+            foreach ($appliedVouchers as $av) {
+                $success = $this->orderModel->addOrderVoucher([
+                    'order_id' => $orderId,
+                    'voucher_id' => $av['voucher_id'],
+                    'discount_applied' => $av['discount_applied']
+                ]);
+
+                if (!$success) {
+                    $this->sendError('Failed to apply voucher to order', 500);
+                    return;
+                }
+            }
+
+            // ── Award reward points (1 point per RM1 spent) ──
+            $pointsEarned = (int)floor($finalTotal);
+            if ($pointsEarned > 0) {
+                $this->orderModel->addRewardTransaction([
+                    'user_id' => $data['user_id'],
+                    'order_id' => $orderId,
+                    'points' => $pointsEarned,
+                    'type' => 'earn'
+                ]);
+
+                // Update user reward points
+                $newPoints = ($user['reward_points'] ?? 0) + $pointsEarned;
+                $this->userModel->update($data['user_id'], [
+                    'name' => $user['name'],
+                    'email' => $user['email'],
+                    'phone' => $user['phone'],
+                    'reward_points' => $newPoints,
+                    'status' => $user['status']
+                ]);
+            }
+
+            // ── Build response ──
+            $order = $this->orderModel->getOrderWithDetails($orderId);
+            $order['points_earned'] = $pointsEarned;
+
+            $this->sendCreated($order, 'Order created successfully');
+
+        } catch (Exception $e) {
+            $this->sendError('Failed to create order: ' . $e->getMessage(), 500);
         }
     }
 
