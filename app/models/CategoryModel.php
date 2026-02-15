@@ -15,6 +15,21 @@ class CategoryModel
         return $this->resultSet();
     }
 
+    public function getTotal()
+    {
+        $this->query("SELECT COUNT(*) as total FROM menu_categories");
+        $result = $this->single();
+        return $result['total'];
+    }
+
+    public function getPaginated($page = 1, $perPage = 10)
+    {
+        $offset = ($page - 1) * $perPage;
+        $this->query("SELECT * FROM menu_categories ORDER BY id DESC LIMIT ? OFFSET ?");
+        $this->bind("ii", $perPage, $offset);
+        return $this->resultSet();
+    }
+
     public function create($data)
     {
         $this->query("INSERT INTO menu_categories (name, description) VALUES (?, ?)");

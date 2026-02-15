@@ -6,7 +6,20 @@ class Vouchers extends Dashboard
     public function index()
     {
         $voucherModel = new VoucherModel();
-        $data['vouchers'] = $voucherModel->getAll();
+        $perPage = 10;
+        $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
+        $totalItems = $voucherModel->getTotal();
+        $totalPages = max(1, ceil($totalItems / $perPage));
+        $page = min($page, $totalPages);
+
+        $data['vouchers'] = $voucherModel->getPaginated($page, $perPage);
+        $data['pagination'] = [
+            'page' => $page,
+            'perPage' => $perPage,
+            'totalItems' => $totalItems,
+            'totalPages' => $totalPages,
+            'baseUrl' => ROOT . '/dashboard/vouchers'
+        ];
         $data['tab'] = 'vouchers';
         $this->view('dashboard/index', $data);
     }

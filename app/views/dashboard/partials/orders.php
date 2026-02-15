@@ -1,11 +1,12 @@
 <div class="dashboard-card">
     <div class="card-header-row">
-        <h2>Recent Orders</h2>
+        <h2>Recent Orders <span class="badge badge-total"><?= $pagination['totalItems'] ?? 0 ?> total</span></h2>
     </div>
     <div class="table-responsive">
         <table>
             <thead>
                 <tr>
+                    <th>#</th>
                     <th>ID</th>
                     <th>Customer</th>
                     <th>Outlet</th>
@@ -17,10 +18,12 @@
             </thead>
             <tbody>
                 <?php if (empty($orders)): ?>
-                    <tr><td colspan="7" class="empty-state">No orders found</td></tr>
+                    <tr><td colspan="8" class="empty-state">No orders found</td></tr>
                 <?php endif; ?>
+                <?php $rowNum = (($pagination['page'] - 1) * $pagination['perPage']); ?>
                 <?php foreach ($orders as $order): ?>
                     <tr>
+                        <td class="row-number"><?= ++$rowNum ?></td>
                         <td>#<?= $order['id'] ?></td>
                         <td><?= htmlspecialchars($order['user_name'] ?? 'Guest') ?></td>
                         <td><?= htmlspecialchars($order['outlet_name']) ?></td>
@@ -51,6 +54,7 @@
             </tbody>
         </table>
     </div>
+    <?php include 'pagination.php'; ?>
 </div>
 
 <?php if (!isGuest()): ?>

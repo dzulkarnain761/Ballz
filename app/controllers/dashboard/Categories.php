@@ -6,7 +6,20 @@ class Categories extends Dashboard
     public function index()
     {
         $categoryModel = new CategoryModel();
-        $data['categories'] = $categoryModel->getAll();
+        $perPage = 10;
+        $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
+        $totalItems = $categoryModel->getTotal();
+        $totalPages = max(1, ceil($totalItems / $perPage));
+        $page = min($page, $totalPages);
+
+        $data['categories'] = $categoryModel->getPaginated($page, $perPage);
+        $data['pagination'] = [
+            'page' => $page,
+            'perPage' => $perPage,
+            'totalItems' => $totalItems,
+            'totalPages' => $totalPages,
+            'baseUrl' => ROOT . '/dashboard/categories'
+        ];
         $data['tab'] = 'categories';
         $this->view('dashboard/index', $data);
     }

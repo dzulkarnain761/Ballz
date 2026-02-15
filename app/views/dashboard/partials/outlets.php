@@ -1,6 +1,6 @@
 <div class="dashboard-card">
     <div class="card-header-row">
-        <h2>Manage Outlets</h2>
+        <h2>Manage Outlets <span class="badge badge-total"><?= $pagination['totalItems'] ?? 0 ?> total</span></h2>
         <?php if (!isGuest()): ?>
         <button class="btn btn-primary btn-add-new" onclick="openOutletModal()">
             <iconify-icon icon="material-symbols:add-rounded"></iconify-icon> Add Outlet
@@ -12,6 +12,7 @@
         <table>
             <thead>
                 <tr>
+                    <th>#</th>
                     <th>Code</th>
                     <th>Name</th>
                     <th>Location</th>
@@ -22,10 +23,12 @@
             </thead>
             <tbody>
                 <?php if (empty($outlets)): ?>
-                    <tr><td colspan="6" class="empty-state">No outlets found</td></tr>
+                    <tr><td colspan="7" class="empty-state">No outlets found</td></tr>
                 <?php endif; ?>
+                <?php $rowNum = (($pagination['page'] - 1) * $pagination['perPage']); ?>
                 <?php foreach ($outlets as $outlet): ?>
                     <tr>
+                        <td class="row-number"><?= ++$rowNum ?></td>
                         <td><code><?= htmlspecialchars($outlet['code']) ?></code></td>
                         <td><?= htmlspecialchars($outlet['name']) ?></td>
                         <td><?= htmlspecialchars($outlet['city']) ?>, <?= htmlspecialchars($outlet['state']) ?></td>
@@ -61,6 +64,7 @@
             </tbody>
         </table>
     </div>
+    <?php include 'pagination.php'; ?>
 </div>
 
 <?php if (!isGuest()): ?>

@@ -1,6 +1,6 @@
 <div class="dashboard-card">
     <div class="card-header-row">
-        <h2>Manage Menu Items</h2>
+        <h2>Manage Menu Items <span class="badge badge-total"><?= $pagination['totalItems'] ?? 0 ?> total</span></h2>
         <?php if (!isGuest()): ?>
         <button class="btn btn-primary btn-add-new" onclick="openItemModal()">
             <iconify-icon icon="material-symbols:add-rounded"></iconify-icon> Add Item
@@ -12,6 +12,7 @@
         <table>
             <thead>
                 <tr>
+                    <th>#</th>
                     <th>Name</th>
                     <th>Category</th>
                     <th>Price</th>
@@ -21,10 +22,12 @@
             </thead>
             <tbody>
                 <?php if (empty($items)): ?>
-                    <tr><td colspan="5" class="empty-state">No menu items found</td></tr>
+                    <tr><td colspan="6" class="empty-state">No menu items found</td></tr>
                 <?php endif; ?>
+                <?php $rowNum = (($pagination['page'] - 1) * $pagination['perPage']); ?>
                 <?php foreach ($items as $item): ?>
                     <tr>
+                        <td class="row-number"><?= ++$rowNum ?></td>
                         <td><?= htmlspecialchars($item['name']) ?></td>
                         <td><?= htmlspecialchars($item['category_name']) ?></td>
                         <td>RM<?= number_format($item['price'], 2) ?></td>
@@ -50,6 +53,7 @@
             </tbody>
         </table>
     </div>
+    <?php include 'pagination.php'; ?>
 </div>
 
 <?php if (!isGuest()): ?>

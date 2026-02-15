@@ -1,6 +1,6 @@
 <div class="dashboard-card">
     <div class="card-header-row">
-        <h2>Manage Customers</h2>
+        <h2>Manage Customers <span class="badge badge-total"><?= $pagination['totalItems'] ?? 0 ?> total</span></h2>
         <?php if (!isGuest()): ?>
         <button class="btn btn-primary btn-add-new" onclick="openUserModal()">
             <iconify-icon icon="material-symbols:add-rounded"></iconify-icon> Add Customer
@@ -12,6 +12,7 @@
         <table>
             <thead>
                 <tr>
+                    <th>#</th>
                     <th>Name</th>
                     <th>Contact</th>
                     <th>Points</th>
@@ -21,10 +22,12 @@
             </thead>
             <tbody>
                 <?php if (empty($users)): ?>
-                    <tr><td colspan="5" class="empty-state">No customers found</td></tr>
+                    <tr><td colspan="6" class="empty-state">No customers found</td></tr>
                 <?php endif; ?>
+                <?php $rowNum = (($pagination['page'] - 1) * $pagination['perPage']); ?>
                 <?php foreach ($users as $user): ?>
                     <tr>
+                        <td class="row-number"><?= ++$rowNum ?></td>
                         <td><?= htmlspecialchars($user['name']) ?></td>
                         <td>
                             <small>
@@ -62,6 +65,7 @@
             </tbody>
         </table>
     </div>
+    <?php include 'partials/pagination.php'; ?>
 </div>
 
 <?php if (!isGuest()): ?>

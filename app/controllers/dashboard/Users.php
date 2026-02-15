@@ -7,7 +7,20 @@ class Users extends Dashboard
     public function index()
     {
         $userModel = new UserModel();
-        $data['users'] = $userModel->getAll();
+        $perPage = 10;
+        $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
+        $totalItems = $userModel->getTotal();
+        $totalPages = max(1, ceil($totalItems / $perPage));
+        $page = min($page, $totalPages);
+
+        $data['users'] = $userModel->getPaginated($page, $perPage);
+        $data['pagination'] = [
+            'page' => $page,
+            'perPage' => $perPage,
+            'totalItems' => $totalItems,
+            'totalPages' => $totalPages,
+            'baseUrl' => ROOT . '/dashboard/users'
+        ];
         $data['tab'] = 'users';
         $this->view('dashboard/index', $data);
     }

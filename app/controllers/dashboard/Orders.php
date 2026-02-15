@@ -6,7 +6,20 @@ class Orders extends Dashboard
     public function index()
     {
         $orderModel = new OrderModel();
-        $data['orders'] = $orderModel->getAll();
+        $perPage = 10;
+        $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
+        $totalItems = $orderModel->getTotal();
+        $totalPages = max(1, ceil($totalItems / $perPage));
+        $page = min($page, $totalPages);
+
+        $data['orders'] = $orderModel->getPaginated($page, $perPage);
+        $data['pagination'] = [
+            'page' => $page,
+            'perPage' => $perPage,
+            'totalItems' => $totalItems,
+            'totalPages' => $totalPages,
+            'baseUrl' => ROOT . '/dashboard/orders'
+        ];
         $data['tab'] = 'orders';
         $this->view('dashboard/index', $data);
     }

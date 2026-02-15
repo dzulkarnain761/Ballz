@@ -15,6 +15,21 @@ class OutletModel
         return $this->resultSet();
     }
 
+    public function getTotal()
+    {
+        $this->query("SELECT COUNT(*) as total FROM outlets");
+        $result = $this->single();
+        return $result['total'];
+    }
+
+    public function getPaginated($page = 1, $perPage = 10)
+    {
+        $offset = ($page - 1) * $perPage;
+        $this->query("SELECT * FROM outlets ORDER BY name ASC LIMIT ? OFFSET ?");
+        $this->bind("ii", $perPage, $offset);
+        return $this->resultSet();
+    }
+
     public function getById($id)
     {
         $this->query("SELECT * FROM outlets WHERE id = ?");

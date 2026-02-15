@@ -7,8 +7,21 @@ class Items extends Dashboard
     {
         $itemModel = new MenuItemModel();
         $categoryModel = new CategoryModel();
-        $data['items'] = $itemModel->getAll();
+        $perPage = 10;
+        $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
+        $totalItems = $itemModel->getTotal();
+        $totalPages = max(1, ceil($totalItems / $perPage));
+        $page = min($page, $totalPages);
+
+        $data['items'] = $itemModel->getPaginated($page, $perPage);
         $data['categories'] = $categoryModel->getAll();
+        $data['pagination'] = [
+            'page' => $page,
+            'perPage' => $perPage,
+            'totalItems' => $totalItems,
+            'totalPages' => $totalPages,
+            'baseUrl' => ROOT . '/dashboard/items'
+        ];
         $data['tab'] = 'items';
         $this->view('dashboard/index', $data);
     }

@@ -7,7 +7,20 @@ class Outlets extends Dashboard
     public function index()
     {
         $outletModel = new OutletModel();
-        $data['outlets'] = $outletModel->getAll();
+        $perPage = 10;
+        $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
+        $totalItems = $outletModel->getTotal();
+        $totalPages = max(1, ceil($totalItems / $perPage));
+        $page = min($page, $totalPages);
+
+        $data['outlets'] = $outletModel->getPaginated($page, $perPage);
+        $data['pagination'] = [
+            'page' => $page,
+            'perPage' => $perPage,
+            'totalItems' => $totalItems,
+            'totalPages' => $totalPages,
+            'baseUrl' => ROOT . '/dashboard/outlets'
+        ];
         $data['tab'] = 'outlets';
         $this->view('dashboard/index', $data);
     }

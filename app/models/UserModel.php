@@ -11,6 +11,21 @@ class UserModel
         return $this->resultSet();
     }
 
+    public function getTotal()
+    {
+        $this->query("SELECT COUNT(*) as total FROM users");
+        $result = $this->single();
+        return $result['total'];
+    }
+
+    public function getPaginated($page = 1, $perPage = 10)
+    {
+        $offset = ($page - 1) * $perPage;
+        $this->query("SELECT * FROM users ORDER BY created_at DESC LIMIT ? OFFSET ?");
+        $this->bind("ii", $perPage, $offset);
+        return $this->resultSet();
+    }
+
     public function getOne($id)
     {
         $this->query("SELECT * FROM users WHERE id = ?");

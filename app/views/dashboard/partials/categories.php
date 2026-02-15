@@ -1,6 +1,6 @@
 <div class="dashboard-card">
     <div class="card-header-row">
-        <h2>Manage Categories</h2>
+        <h2>Manage Categories <span class="badge badge-total"><?= $pagination['totalItems'] ?? 0 ?> total</span></h2>
         <?php if (!isGuest()): ?>
         <button class="btn btn-primary btn-add-new" onclick="openCategoryModal()">
             <iconify-icon icon="material-symbols:add-rounded"></iconify-icon> Add Category
@@ -12,6 +12,7 @@
         <table>
             <thead>
                 <tr>
+                    <th>#</th>
                     <th>Name</th>
                     <th>Description</th>
                     <?php if (!isGuest()): ?><th>Actions</th><?php endif; ?>
@@ -19,10 +20,12 @@
             </thead>
             <tbody>
                 <?php if (empty($categories)): ?>
-                    <tr><td colspan="3" class="empty-state">No categories found</td></tr>
+                    <tr><td colspan="4" class="empty-state">No categories found</td></tr>
                 <?php endif; ?>
+                <?php $rowNum = (($pagination['page'] - 1) * $pagination['perPage']); ?>
                 <?php foreach ($categories as $cat): ?>
                     <tr>
+                        <td class="row-number"><?= ++$rowNum ?></td>
                         <td><?= htmlspecialchars($cat['name']) ?></td>
                         <td><?= htmlspecialchars($cat['description']) ?></td>
                         <?php if (!isGuest()): ?>
@@ -42,6 +45,7 @@
             </tbody>
         </table>
     </div>
+    <?php include 'pagination.php'; ?>
 </div>
 
 <?php if (!isGuest()): ?>
