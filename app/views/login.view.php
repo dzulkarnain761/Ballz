@@ -100,13 +100,13 @@
         .auth-btn {
             width: 100%;
             margin-top: var(--spacing-md);
-            margin-bottom: var(--spacing-lg);
+            margin-bottom: var(--spacing-md);
         }
 
         .divider {
             display: flex;
             align-items: center;
-            margin-bottom: var(--spacing-lg);
+            margin-bottom: var(--spacing-md);
             color: var(--text-color);
             opacity: 0.4;
             font-size: 0.9rem;
@@ -122,43 +122,34 @@
         .divider::before { margin-right: 16px; }
         .divider::after { margin-left: 16px; }
 
-        .social-login {
-            display: flex;
-            flex-direction: column;
-            gap: var(--spacing-md);
-        }
-
-        .btn-social {
+        .btn-guest {
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 12px;
-            padding: 12px;
+            gap: 10px;
+            width: 100%;
+            padding: 14px;
             border-radius: 16px;
-            text-decoration: none;
+            border: 2px solid var(--border-color);
+            background: transparent;
+            color: var(--text-color);
             font-weight: 600;
             font-size: 1rem;
-            border: 2px solid var(--border-color);
-            color: var(--text-color);
-            transition: all var(--transition-fast);
-            background: transparent;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            margin-bottom: var(--spacing-lg);
         }
 
-        .btn-social:hover {
+        .btn-guest:hover {
             background-color: var(--bg-color);
             border-color: var(--text-color);
             transform: translateY(-2px);
         }
 
-        .btn-google { border-color: #DB4437; }
-        .btn-google:hover { background-color: #DB4437; color: white; }
-        .btn-google iconify-icon { color: #DB4437; font-size: 1.4rem; }
-        .btn-google:hover iconify-icon { color: white; }
-
-        .btn-facebook { border-color: #1877F2; }
-        .btn-facebook:hover { background-color: #1877F2; color: white; }
-        .btn-facebook iconify-icon { color: #1877F2; font-size: 1.4rem; }
-        .btn-facebook:hover iconify-icon { color: white; }
+        .btn-guest iconify-icon {
+            font-size: 1.3rem;
+            opacity: 0.7;
+        }
 
         .alert {
             padding: 12px 16px;
@@ -208,20 +199,30 @@
                 <?php unset($_SESSION['success']); ?>
             <?php endif; ?>
 
-            <div class="social-login">
-                <a href="<?= ROOT ?>/auth/google" class="btn-social btn-google">
-                    <iconify-icon icon="logos:google-icon"></iconify-icon>
-                    Continue with Google
-                </a>
-                <a href="<?= ROOT ?>/auth/facebook" class="btn-social btn-facebook">
-                    <iconify-icon icon="logos:facebook"></iconify-icon>
-                    Continue with Facebook
-                </a>
-            </div>
+            <form class="auth-form" method="POST" action="<?= ROOT ?>/auth/login">
+                <?= csrfInput() ?>
 
-            <div class="auth-footer">
-                New to Ballz? Sign in with Google or Facebook to get started!
-            </div>
+                <label class="form-label" for="username">Username</label>
+                <div class="input-group">
+                    <iconify-icon icon="mdi:account-outline"></iconify-icon>
+                    <input type="text" id="username" name="username" class="auth-input" placeholder="Enter your username" required autofocus>
+                </div>
+
+                <label class="form-label" for="password">Password</label>
+                <div class="input-group">
+                    <iconify-icon icon="mdi:lock-outline"></iconify-icon>
+                    <input type="password" id="password" name="password" class="auth-input" placeholder="Enter your password" required>
+                </div>
+
+                <button type="submit" class="btn btn-primary auth-btn">Log In</button>
+            </form>
+
+            <div class="divider">or</div>
+
+            <a href="<?= ROOT ?>/auth/guest" class="btn-guest">
+                <iconify-icon icon="mdi:account-eye-outline"></iconify-icon>
+                Continue as Guest
+            </a>
         </div>
     </div>
 

@@ -13,6 +13,7 @@ class Orders extends Dashboard
 
     public function status($id)
     {
+        $this->guardGuest();
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $orderModel = new OrderModel();
             $status = $_POST['status'];

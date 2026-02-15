@@ -24,8 +24,9 @@
             </a>
             <nav class="nav">
                 <ul class="nav-list">
-                    <li><a href="#menu">Menu</a></li>
-                    <li><a href="#about">About</a></li>
+                    
+                    <li><a href="#api">API</a></li>
+                    <li><a href="<?= ROOT ?>/dashboard/index">Dashboard</a></li>
                    
                     <li><button id="theme-toggle" class="theme-toggle" aria-label="Toggle Dark Mode"><iconify-icon icon="material-symbols:dark-mode-outline"></iconify-icon></button></li>
                 </ul>

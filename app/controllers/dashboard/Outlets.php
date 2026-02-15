@@ -14,6 +14,7 @@ class Outlets extends Dashboard
 
     public function add()
     {
+        $this->guardGuest();
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $outletModel = new OutletModel();
             $data = [
@@ -35,6 +36,7 @@ class Outlets extends Dashboard
 
     public function edit($id)
     {
+        $this->guardGuest();
         $outletModel = new OutletModel();
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $data = [
@@ -59,6 +61,7 @@ class Outlets extends Dashboard
 
     public function delete($id)
     {
+        $this->guardGuest();
         $outletModel = new OutletModel();
         if ($outletModel->delete($id)) {
             $this->returnWithSuccess('Success', 'Outlet deleted successfully', '/dashboard/outlets');

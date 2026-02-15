@@ -3,6 +3,7 @@
         <h2>Manage Customers</h2>
     </div>
 
+    <?php if (!isGuest()): ?>
     <div class="form-card">
         <h3>Add New Customer</h3>
         <form action="<?= ROOT ?>/dashboard/user_add" method="POST">
@@ -36,6 +37,7 @@
             <button type="submit" class="btn btn-primary">Add Customer</button>
         </form>
     </div>
+    <?php endif; ?>
 
     <div class="table-responsive">
         <table>
@@ -45,7 +47,7 @@
                     <th>Contact</th>
                     <th>Points</th>
                     <th>Status</th>
-                    <th>Actions</th>
+                    <?php if (!isGuest()): ?><th>Actions</th><?php endif; ?>
                 </tr>
             </thead>
             <tbody>
@@ -64,12 +66,14 @@
                                 <?= ucfirst($user['status']) ?>
                             </span>
                         </td>
+                        <?php if (!isGuest()): ?>
                         <td>
                             <div style="display: flex; gap: 6px; flex-wrap: wrap;">
                                 <a href="<?= ROOT ?>/dashboard/user_edit/<?= $user['id'] ?>" class="btn btn-sm btn-edit">Edit</a>
                                 <a href="<?= ROOT ?>/dashboard/user_delete/<?= $user['id'] ?>" class="btn btn-sm btn-delete" onclick="return confirm('Are you sure?')">Delete</a>
                             </div>
                         </td>
+                        <?php endif; ?>
                     </tr>
                 <?php endforeach; ?>
             </tbody>

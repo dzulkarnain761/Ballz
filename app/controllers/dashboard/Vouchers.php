@@ -13,6 +13,7 @@ class Vouchers extends Dashboard
 
     public function add()
     {
+        $this->guardGuest();
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $voucherModel = new VoucherModel();
             $data = [
@@ -36,6 +37,7 @@ class Vouchers extends Dashboard
 
     public function edit($id)
     {
+        $this->guardGuest();
         $voucherModel = new VoucherModel();
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $data = [
@@ -62,6 +64,7 @@ class Vouchers extends Dashboard
 
     public function delete($id)
     {
+        $this->guardGuest();
         $voucherModel = new VoucherModel();
         if ($voucherModel->delete($id)) {
             $this->returnWithSuccess('Success', 'Voucher deleted successfully', '/dashboard/vouchers');

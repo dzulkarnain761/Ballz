@@ -14,6 +14,7 @@ class Users extends Dashboard
 
     public function add()
     {
+        $this->guardGuest();
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $userModel = new UserModel();
             $data = [
@@ -33,6 +34,7 @@ class Users extends Dashboard
 
     public function edit($id)
     {
+        $this->guardGuest();
         $userModel = new UserModel();
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $data = [
@@ -55,6 +57,7 @@ class Users extends Dashboard
 
     public function delete($id)
     {
+        $this->guardGuest();
         $userModel = new UserModel();
         if ($userModel->delete($id)) {
             $this->returnWithSuccess('Success', 'Customer deleted successfully', '/dashboard/users');

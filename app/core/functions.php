@@ -78,12 +78,17 @@ function formatDate($date)
 
 function isLoggedIn()
 {
-    return isset($_SESSION['id_admin']) || isset($_SESSION['no_gaji']);
+    return isset($_SESSION['id_admin']) || isset($_SESSION['no_gaji']) || isset($_SESSION['guest']);
 }
 
 function isAdmin()
 {
-    return isset($_SESSION['role']);
+    return isset($_SESSION['role']) && $_SESSION['role'] === 'admin';
+}
+
+function isGuest()
+{
+    return isset($_SESSION['guest']) && $_SESSION['guest'] === true;
 }
 
 function capitalizeFirstTwoWords($string)

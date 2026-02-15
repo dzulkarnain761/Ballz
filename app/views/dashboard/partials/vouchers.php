@@ -3,6 +3,7 @@
         <h2>Manage Vouchers</h2>
     </div>
 
+    <?php if (!isGuest()): ?>
     <div class="form-card">
         <h3>Add New Voucher</h3>
         <form action="<?= ROOT ?>/dashboard/voucher_add" method="POST">
@@ -55,6 +56,7 @@
             <button type="submit" class="btn btn-primary">Add Voucher</button>
         </form>
     </div>
+    <?php endif; ?>
 
     <div class="table-responsive">
         <table>
@@ -65,7 +67,7 @@
                     <th>Discount</th>
                     <th>Validity</th>
                     <th>Status</th>
-                    <th>Actions</th>
+                    <?php if (!isGuest()): ?><th>Actions</th><?php endif; ?>
                 </tr>
             </thead>
             <tbody>
@@ -87,12 +89,14 @@
                                 <?= $vouch['is_active'] ? 'Active' : 'Inactive' ?>
                             </span>
                         </td>
+                        <?php if (!isGuest()): ?>
                         <td>
                             <div style="display: flex; gap: 6px; flex-wrap: wrap;">
                                 <a href="<?= ROOT ?>/dashboard/voucher_edit/<?= $vouch['id'] ?>" class="btn btn-sm btn-edit">Edit</a>
                                 <a href="<?= ROOT ?>/dashboard/voucher_delete/<?= $vouch['id'] ?>" class="btn btn-sm btn-delete" onclick="return confirm('Are you sure?')">Delete</a>
                             </div>
                         </td>
+                        <?php endif; ?>
                     </tr>
                 <?php endforeach; ?>
             </tbody>

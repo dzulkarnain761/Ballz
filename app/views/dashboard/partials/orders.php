@@ -12,7 +12,7 @@
                     <th>Total</th>
                     <th>Type</th>
                     <th>Status</th>
-                    <th>Actions</th>
+                    <?php if (!isGuest()): ?><th>Actions</th><?php endif; ?>
                 </tr>
             </thead>
             <tbody>
@@ -34,6 +34,7 @@
                                 <?= ucfirst($order['status']) ?>
                             </span>
                         </td>
+                        <?php if (!isGuest()): ?>
                         <td>
                             <form action="<?= ROOT ?>/dashboard/order_status/<?= $order['id'] ?>" method="POST" style="display: flex; gap: 6px; flex-wrap: wrap; align-items: center;">
                                 <select name="status" class="form-control" style="padding: 6px 10px; width: auto; font-size: 0.8rem;">
@@ -45,6 +46,7 @@
                                 <button type="submit" class="btn btn-sm btn-primary">Update</button>
                             </form>
                         </td>
+                        <?php endif; ?>
                     </tr>
                 <?php endforeach; ?>
             </tbody>

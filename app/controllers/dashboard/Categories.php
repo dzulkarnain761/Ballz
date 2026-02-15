@@ -13,6 +13,7 @@ class Categories extends Dashboard
 
     public function add()
     {
+        $this->guardGuest();
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $categoryModel = new CategoryModel();
             $data = [
@@ -29,6 +30,7 @@ class Categories extends Dashboard
 
     public function edit($id)
     {
+        $this->guardGuest();
         $categoryModel = new CategoryModel();
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $data = [
@@ -48,6 +50,7 @@ class Categories extends Dashboard
 
     public function delete($id)
     {
+        $this->guardGuest();
         $categoryModel = new CategoryModel();
         if ($categoryModel->delete($id)) {
             $this->returnWithSuccess('Success', 'Category deleted successfully', '/dashboard/categories');

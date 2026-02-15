@@ -75,9 +75,20 @@
 
     <!-- Sidebar footer -->
     <div class="sidebar-footer">
-        <a href="<?= ROOT ?>/auth/logout" class="sidebar-logout">
-            <iconify-icon icon="material-symbols:logout-rounded"></iconify-icon>
-            <span>Logout</span>
-        </a>
+        <?php if (isGuest()): ?>
+            <div style="text-align: center; padding: 8px; margin-bottom: 8px; background: var(--bg-color); border-radius: 12px; font-size: 0.85rem; opacity: 0.7;">
+                <iconify-icon icon="mdi:eye-outline" style="vertical-align: middle;"></iconify-icon>
+                Viewing as Guest (Read Only)
+            </div>
+            <a href="<?= ROOT ?>/auth/login" class="sidebar-logout" style="background: var(--color-primary); color: white; border-radius: 12px; text-align: center; justify-content: center;">
+                <iconify-icon icon="material-symbols:login-rounded"></iconify-icon>
+                <span>Login as Admin</span>
+            </a>
+        <?php else: ?>
+            <a href="<?= ROOT ?>/auth/logout" class="sidebar-logout">
+                <iconify-icon icon="material-symbols:logout-rounded"></iconify-icon>
+                <span>Logout</span>
+            </a>
+        <?php endif; ?>
     </div>
 </aside>

@@ -3,6 +3,7 @@
         <h2>Manage Menu Items</h2>
     </div>
 
+    <?php if (!isGuest()): ?>
     <div class="form-card">
         <h3>Add New Item</h3>
         <form action="<?= ROOT ?>/dashboard/item_add" method="POST">
@@ -38,6 +39,7 @@
             <button type="submit" class="btn btn-primary">Add Item</button>
         </form>
     </div>
+    <?php endif; ?>
 
     <div class="table-responsive">
         <table>
@@ -47,7 +49,7 @@
                     <th>Category</th>
                     <th>Price</th>
                     <th>Status</th>
-                    <th>Actions</th>
+                    <?php if (!isGuest()): ?><th>Actions</th><?php endif; ?>
                 </tr>
             </thead>
             <tbody>
@@ -61,12 +63,14 @@
                                 <?= $item['is_active'] ? 'Active' : 'Inactive' ?>
                             </span>
                         </td>
+                        <?php if (!isGuest()): ?>
                         <td>
                             <div style="display: flex; gap: 6px; flex-wrap: wrap;">
                                 <a href="<?= ROOT ?>/dashboard/item_edit/<?= $item['id'] ?>" class="btn btn-sm btn-edit">Edit</a>
                                 <a href="<?= ROOT ?>/dashboard/item_delete/<?= $item['id'] ?>" class="btn btn-sm btn-delete" onclick="return confirm('Are you sure?')">Delete</a>
                             </div>
                         </td>
+                        <?php endif; ?>
                     </tr>
                 <?php endforeach; ?>
             </tbody>

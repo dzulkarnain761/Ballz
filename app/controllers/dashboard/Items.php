@@ -15,6 +15,7 @@ class Items extends Dashboard
 
     public function add()
     {
+        $this->guardGuest();
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $itemModel = new MenuItemModel();
             $data = [
@@ -34,6 +35,7 @@ class Items extends Dashboard
 
     public function edit($id)
     {
+        $this->guardGuest();
         $itemModel = new MenuItemModel();
         $categoryModel = new CategoryModel();
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
@@ -58,6 +60,7 @@ class Items extends Dashboard
 
     public function delete($id)
     {
+        $this->guardGuest();
         $itemModel = new MenuItemModel();
         if ($itemModel->delete($id)) {
             $this->returnWithSuccess('Success', 'Item deleted successfully', '/dashboard/items');
