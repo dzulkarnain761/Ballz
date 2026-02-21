@@ -643,7 +643,16 @@
                         <iconify-icon icon="material-symbols:receipt-long-outline-rounded"></iconify-icon> Orders
                     </a>
                     <a href="#auth-endpoint" class="docs-nav-link">
-                        <iconify-icon icon="material-symbols:login-rounded"></iconify-icon> Auth
+                        <iconify-icon icon="material-symbols:login-rounded"></iconify-icon> Auth (Social)
+                    </a>
+                    <a href="#login-endpoint" class="docs-nav-link">
+                        <iconify-icon icon="material-symbols:lock-open-outline-rounded"></iconify-icon> Login (Email)
+                    </a>
+                    <a href="#refresh-token-endpoint" class="docs-nav-link">
+                        <iconify-icon icon="material-symbols:refresh-rounded"></iconify-icon> Refresh Token
+                    </a>
+                    <a href="#logout-endpoint" class="docs-nav-link">
+                        <iconify-icon icon="material-symbols:logout-rounded"></iconify-icon> Logout
                     </a>
                 </div>
 
@@ -686,10 +695,10 @@
             <!-- Authentication -->
             <section id="authentication" class="docs-section">
                 <h2><iconify-icon icon="material-symbols:key-outline-rounded"></iconify-icon> Authentication</h2>
-                <p>Most endpoints require an API key for access. Some endpoints are public and do not require authentication.</p>
+                <p>The API uses a <strong>dual authentication</strong> system: <strong>API keys</strong> for app-level access and <strong>JWT tokens</strong> for user-level access.</p>
 
-                <h3>Sending Your API Key</h3>
-                <p>Include your API key in one of the following ways (in order of preference):</p>
+                <h3>1. API Key Authentication</h3>
+                <p>API keys identify your application. They are required for login and registration endpoints.</p>
 
                 <div class="code-block">
 <span class="comment"># Option 1: Authorization header (recommended)</span>
@@ -699,20 +708,51 @@ Authorization: Bearer <span class="string">your_api_key_here</span>
 X-API-Key: <span class="string">your_api_key_here</span>
 
 <span class="comment"># Option 3: Query parameter (least secure)</span>
-<span class="url">GET /api/v1/users?api_key=your_api_key_here</span>
+<span class="url">GET /api/v1/login?api_key=your_api_key_here</span>
                 </div>
 
-                <h3>Public Endpoints</h3>
-                <p>The following endpoints are publicly accessible without an API key:</p>
-                <div style="display: flex; gap: 8px; flex-wrap: wrap; margin: var(--spacing-sm) 0;">
-                    <code style="font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; background: var(--bg-color); padding: 4px 10px; border-radius: 6px;">/menu</code>
-                    <code style="font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; background: var(--bg-color); padding: 4px 10px; border-radius: 6px;">/outlets</code>
-                    <code style="font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; background: var(--bg-color); padding: 4px 10px; border-radius: 6px;">/vouchers</code>
-                    <code style="font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; background: var(--bg-color); padding: 4px 10px; border-radius: 6px;">/rewards</code>
+                <h3>2. JWT Token Authentication</h3>
+                <p>After login, use the <strong>JWT access token</strong> to access protected endpoints. Access tokens are short-lived (15 minutes) for security.</p>
+
+                <div class="code-block">
+<span class="comment"># Use the access_token from login response</span>
+Authorization: Bearer <span class="string">eyJhbGciOiJIUzI1NiIs...</span>
                 </div>
+
+                <h3>Authentication Flow</h3>
+                <div class="info-box info">
+                    <p>
+                        <strong>Step-by-step JWT flow:</strong><br>
+                        1. <strong>Login</strong> — <code>POST /api/v1/login</code> with API key → receive <code>access_token</code> + <code>refresh_token</code><br>
+                        2. <strong>Use API</strong> — Send <code>access_token</code> in <code>Authorization: Bearer</code> header<br>
+                        3. <strong>Refresh</strong> — When access token expires, <code>POST /api/v1/refresh-token</code> with API key → get new token pair<br>
+                        4. <strong>Logout</strong> — <code>POST /api/v1/logout</code> with API key → revoke refresh token
+                    </p>
+                </div>
+
+                <h3>Endpoint Auth Requirements</h3>
+                <table class="params-table">
+                    <thead>
+                        <tr><th>Endpoints</th><th>Auth Required</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>/menu</code>, <code>/outlets</code>, <code>/vouchers</code>, <code>/rewards</code></td>
+                            <td><span class="public-badge">Public</span> No auth needed</td>
+                        </tr>
+                        <tr>
+                            <td><code>/login</code>, <code>/auth</code>, <code>/refresh-token</code>, <code>/logout</code></td>
+                            <td><span class="auth-badge">API Key</span> App-level key</td>
+                        </tr>
+                        <tr>
+                            <td><code>/users</code>, <code>/orders</code>, <code>/reward-transactions</code></td>
+                            <td><span class="auth-badge">JWT Token</span> User access token</td>
+                        </tr>
+                    </tbody>
+                </table>
 
                 <div class="info-box warning">
-                    <p><strong><iconify-icon icon="material-symbols:warning-outline-rounded" style="vertical-align: middle;"></iconify-icon> Security Notice</strong>Never expose your API key in client-side code. Always use server-side requests when calling protected endpoints.</p>
+                    <p><strong><iconify-icon icon="material-symbols:warning-outline-rounded" style="vertical-align: middle;"></iconify-icon> Security Notice</strong>Never expose your API key in client-side code. Store refresh tokens securely. Access tokens expire in 15 minutes — use refresh tokens to get new ones.</p>
                 </div>
             </section>
 
@@ -1122,14 +1162,14 @@ X-API-Key: <span class="string">your_api_key_here</span>
             <!-- Reward Transactions -->
             <section id="reward-transactions" class="docs-section">
                 <h2><iconify-icon icon="material-symbols:swap-vert-rounded"></iconify-icon> Reward Transactions</h2>
-                <p>Manage reward point transactions — earn points from orders and redeem them for reward items. <span class="auth-badge">API Key Required</span></p>
+                <p>Manage reward point transactions — earn points from orders and redeem them for reward items. <span class="auth-badge">JWT Token Required</span></p>
 
                 <!-- GET /reward-transactions -->
                 <div class="endpoint-card">
                     <div class="endpoint-header" onclick="this.parentElement.classList.toggle('open')">
                         <span class="method-badge method-get">GET</span>
                         <span class="endpoint-path">/api/v1/reward-transactions</span>
-                        <span class="auth-badge">Auth</span>
+                        <span class="auth-badge">JWT Token</span>
                         <span class="endpoint-desc">Get all reward transactions</span>
                         <iconify-icon class="endpoint-toggle" icon="material-symbols:expand-more-rounded"></iconify-icon>
                     </div>
@@ -1173,7 +1213,7 @@ Authorization: Bearer <span class="string">your_api_key</span>
                     <div class="endpoint-header" onclick="this.parentElement.classList.toggle('open')">
                         <span class="method-badge method-get">GET</span>
                         <span class="endpoint-path">/api/v1/reward-transactions/{id}</span>
-                        <span class="auth-badge">Auth</span>
+                        <span class="auth-badge">JWT Token</span>
                         <span class="endpoint-desc">Get a single transaction</span>
                         <iconify-icon class="endpoint-toggle" icon="material-symbols:expand-more-rounded"></iconify-icon>
                     </div>
@@ -1217,7 +1257,7 @@ Authorization: Bearer <span class="string">your_api_key</span>
                     <div class="endpoint-header" onclick="this.parentElement.classList.toggle('open')">
                         <span class="method-badge method-get">GET</span>
                         <span class="endpoint-path">/api/v1/users/{id}/reward-transactions</span>
-                        <span class="auth-badge">Auth</span>
+                        <span class="auth-badge">JWT Token</span>
                         <span class="endpoint-desc">Get user's transactions</span>
                         <iconify-icon class="endpoint-toggle" icon="material-symbols:expand-more-rounded"></iconify-icon>
                     </div>
@@ -1283,7 +1323,7 @@ Authorization: Bearer <span class="string">your_api_key</span>
                     <div class="endpoint-header" onclick="this.parentElement.classList.toggle('open')">
                         <span class="method-badge method-get">GET</span>
                         <span class="endpoint-path">/api/v1/users/{id}/reward-transactions/{transactionId}</span>
-                        <span class="auth-badge">Auth</span>
+                        <span class="auth-badge">JWT Token</span>
                         <span class="endpoint-desc">Get specific user transaction</span>
                         <iconify-icon class="endpoint-toggle" icon="material-symbols:expand-more-rounded"></iconify-icon>
                     </div>
@@ -1328,7 +1368,7 @@ Authorization: Bearer <span class="string">your_api_key</span>
                     <div class="endpoint-header" onclick="this.parentElement.classList.toggle('open')">
                         <span class="method-badge method-post">POST</span>
                         <span class="endpoint-path">/api/v1/reward-transactions</span>
-                        <span class="auth-badge">Auth</span>
+                        <span class="auth-badge">JWT Token</span>
                         <span class="endpoint-desc">Create a reward transaction</span>
                         <iconify-icon class="endpoint-toggle" icon="material-symbols:expand-more-rounded"></iconify-icon>
                     </div>
@@ -1451,14 +1491,14 @@ Content-Type: application/json
             <!-- Users -->
             <section id="users" class="docs-section">
                 <h2><iconify-icon icon="material-symbols:person-outline-rounded"></iconify-icon> Users</h2>
-                <p>Access user accounts and their order history. <span class="auth-badge">API Key Required</span></p>
+                <p>Access user accounts and their order history. <span class="auth-badge">JWT Token Required</span></p>
 
                 <!-- GET /users -->
                 <div class="endpoint-card">
                     <div class="endpoint-header" onclick="this.parentElement.classList.toggle('open')">
                         <span class="method-badge method-get">GET</span>
                         <span class="endpoint-path">/api/v1/users</span>
-                        <span class="auth-badge">Auth</span>
+                        <span class="auth-badge">JWT Token</span>
                         <span class="endpoint-desc">Get all users</span>
                         <iconify-icon class="endpoint-toggle" icon="material-symbols:expand-more-rounded"></iconify-icon>
                     </div>
@@ -1480,7 +1520,7 @@ Authorization: Bearer <span class="string">your_api_key</span>
                     <div class="endpoint-header" onclick="this.parentElement.classList.toggle('open')">
                         <span class="method-badge method-get">GET</span>
                         <span class="endpoint-path">/api/v1/users/{id}</span>
-                        <span class="auth-badge">Auth</span>
+                        <span class="auth-badge">JWT Token</span>
                         <span class="endpoint-desc">Get a single user</span>
                         <iconify-icon class="endpoint-toggle" icon="material-symbols:expand-more-rounded"></iconify-icon>
                     </div>
@@ -1533,7 +1573,7 @@ Authorization: Bearer <span class="string">your_api_key</span>
                     <div class="endpoint-header" onclick="this.parentElement.classList.toggle('open')">
                         <span class="method-badge method-get">GET</span>
                         <span class="endpoint-path">/api/v1/users/{id}/orders</span>
-                        <span class="auth-badge">Auth</span>
+                        <span class="auth-badge">JWT Token</span>
                         <span class="endpoint-desc">Get user's orders</span>
                         <iconify-icon class="endpoint-toggle" icon="material-symbols:expand-more-rounded"></iconify-icon>
                     </div>
@@ -1580,7 +1620,7 @@ Authorization: Bearer <span class="string">your_api_key</span>
                     <div class="endpoint-header" onclick="this.parentElement.classList.toggle('open')">
                         <span class="method-badge method-get">GET</span>
                         <span class="endpoint-path">/api/v1/users/{id}/orders/{orderId}</span>
-                        <span class="auth-badge">Auth</span>
+                        <span class="auth-badge">JWT Token</span>
                         <span class="endpoint-desc">Get specific user order</span>
                         <iconify-icon class="endpoint-toggle" icon="material-symbols:expand-more-rounded"></iconify-icon>
                     </div>
@@ -1624,14 +1664,14 @@ Authorization: Bearer <span class="string">your_api_key</span>
             <!-- Orders -->
             <section id="orders" class="docs-section">
                 <h2><iconify-icon icon="material-symbols:receipt-long-outline-rounded"></iconify-icon> Orders</h2>
-                <p>Create and manage customer orders. <span class="auth-badge">API Key Required</span></p>
+                <p>Create and manage customer orders. <span class="auth-badge">JWT Token Required</span></p>
 
                 <!-- POST /orders -->
                 <div class="endpoint-card">
                     <div class="endpoint-header" onclick="this.parentElement.classList.toggle('open')">
                         <span class="method-badge method-post">POST</span>
                         <span class="endpoint-path">/api/v1/orders</span>
-                        <span class="auth-badge">Auth</span>
+                        <span class="auth-badge">JWT Token</span>
                         <span class="endpoint-desc">Create an order</span>
                         <iconify-icon class="endpoint-toggle" icon="material-symbols:expand-more-rounded"></iconify-icon>
                     </div>
@@ -1763,19 +1803,19 @@ Content-Type: application/json
             <!-- Auth Endpoint -->
             <section id="auth-endpoint" class="docs-section">
                 <h2><iconify-icon icon="material-symbols:login-rounded"></iconify-icon> Auth</h2>
-                <p>Authenticate users via social login providers. Automatically registers new users. <span class="auth-badge">API Key Required</span></p>
+                <p>Authenticate users via social login providers. Automatically registers new users. Returns JWT tokens. <span class="auth-badge">API Key Required</span></p>
 
                 <!-- POST /auth -->
                 <div class="endpoint-card">
                     <div class="endpoint-header" onclick="this.parentElement.classList.toggle('open')">
                         <span class="method-badge method-post">POST</span>
                         <span class="endpoint-path">/api/v1/auth</span>
-                        <span class="auth-badge">Auth</span>
+                        <span class="auth-badge">API Key</span>
                         <span class="endpoint-desc">Login or register user</span>
                         <iconify-icon class="endpoint-toggle" icon="material-symbols:expand-more-rounded"></iconify-icon>
                     </div>
                     <div class="endpoint-body">
-                        <p>Checks if a user exists by their social provider identity. If the user exists, returns their data. If not, automatically registers and returns the new user.</p>
+                        <p>Checks if a user exists by their social provider identity. If the user exists, returns JWT tokens + their data. If not, automatically registers and returns JWT tokens + the new user.</p>
 
                         <h4>Request Body</h4>
                         <table class="params-table">
@@ -1834,11 +1874,16 @@ Content-Type: application/json
     <span class="key">"message"</span>: <span class="string">"User found"</span>,
     <span class="key">"code"</span>: <span class="number">200</span>,
     <span class="key">"data"</span>: {
-        <span class="key">"id"</span>: <span class="number">5</span>,
-        <span class="key">"name"</span>: <span class="string">"John Doe"</span>,
-        <span class="key">"email"</span>: <span class="string">"john@example.com"</span>,
-        <span class="key">"is_new_user"</span>: <span class="keyword">false</span>,
-        ...
+        <span class="key">"access_token"</span>: <span class="string">"eyJhbGciOiJIUzI1NiIs..."</span>,
+        <span class="key">"refresh_token"</span>: <span class="string">"a1b2c3d4e5f6..."</span>,
+        <span class="key">"token_type"</span>: <span class="string">"Bearer"</span>,
+        <span class="key">"expires_in"</span>: <span class="number">900</span>,
+        <span class="key">"user"</span>: {
+            <span class="key">"id"</span>: <span class="number">5</span>,
+            <span class="key">"name"</span>: <span class="string">"John Doe"</span>,
+            <span class="key">"email"</span>: <span class="string">"john@example.com"</span>,
+            <span class="key">"is_new_user"</span>: <span class="keyword">false</span>
+        }
     }
 }
                         </div>
@@ -1851,12 +1896,253 @@ Content-Type: application/json
     <span class="key">"message"</span>: <span class="string">"User registered successfully"</span>,
     <span class="key">"code"</span>: <span class="number">201</span>,
     <span class="key">"data"</span>: {
-        <span class="key">"id"</span>: <span class="number">12</span>,
-        <span class="key">"name"</span>: <span class="string">"John Doe"</span>,
-        <span class="key">"email"</span>: <span class="string">"john@example.com"</span>,
-        <span class="key">"is_new_user"</span>: <span class="keyword">true</span>,
-        ...
+        <span class="key">"access_token"</span>: <span class="string">"eyJhbGciOiJIUzI1NiIs..."</span>,
+        <span class="key">"refresh_token"</span>: <span class="string">"x9y8z7w6v5u4..."</span>,
+        <span class="key">"token_type"</span>: <span class="string">"Bearer"</span>,
+        <span class="key">"expires_in"</span>: <span class="number">900</span>,
+        <span class="key">"user"</span>: {
+            <span class="key">"id"</span>: <span class="number">12</span>,
+            <span class="key">"name"</span>: <span class="string">"John Doe"</span>,
+            <span class="key">"email"</span>: <span class="string">"john@example.com"</span>,
+            <span class="key">"is_new_user"</span>: <span class="keyword">true</span>
+        }
     }
+}
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Login Endpoint -->
+            <section id="login-endpoint" class="docs-section">
+                <h2><iconify-icon icon="material-symbols:lock-open-outline-rounded"></iconify-icon> Login (Email &amp; Password)</h2>
+                <p>Authenticate users using their email address and password. Returns JWT tokens. <span class="auth-badge">API Key Required</span></p>
+
+                <!-- POST /login -->
+                <div class="endpoint-card">
+                    <div class="endpoint-header" onclick="this.parentElement.classList.toggle('open')">
+                        <span class="method-badge method-post">POST</span>
+                        <span class="endpoint-path">/api/v1/login</span>
+                        <span class="auth-badge">API Key</span>
+                        <span class="endpoint-desc">Login with email &amp; password</span>
+                        <iconify-icon class="endpoint-toggle" icon="material-symbols:expand-more-rounded"></iconify-icon>
+                    </div>
+                    <div class="endpoint-body">
+                        <p>Authenticates a user and returns JWT access &amp; refresh tokens. The access token expires in 15 minutes. Use the refresh token to get a new pair.</p>
+
+                        <h4>Request Body</h4>
+                        <table class="params-table">
+                            <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>email</code></td>
+                                    <td>string</td>
+                                    <td><span class="param-required">required</span> User's email address</td>
+                                </tr>
+                                <tr>
+                                    <td><code>password</code></td>
+                                    <td>string</td>
+                                    <td><span class="param-required">required</span> User's password</td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <h4>Example Request</h4>
+                        <div class="code-block">
+<button class="copy-btn" onclick="copyCode(this)">Copy</button>
+<span class="keyword">POST</span> <span class="url"><?= ROOT ?>/api/v1/login</span>
+<span class="comment"># Header:</span>
+Authorization: Bearer <span class="string">your_api_key</span>
+Content-Type: application/json
+
+{
+    <span class="key">"email"</span>: <span class="string">"john@example.com"</span>,
+    <span class="key">"password"</span>: <span class="string">"mypassword123"</span>
+}
+                        </div>
+
+                        <h4>Response (Success)</h4>
+                        <div class="response-label response-success">200 OK</div>
+                        <div class="code-block">
+{
+    <span class="key">"status"</span>: <span class="string">"success"</span>,
+    <span class="key">"message"</span>: <span class="string">"Login successful"</span>,
+    <span class="key">"code"</span>: <span class="number">200</span>,
+    <span class="key">"data"</span>: {
+        <span class="key">"access_token"</span>: <span class="string">"eyJhbGciOiJIUzI1NiIs..."</span>,
+        <span class="key">"refresh_token"</span>: <span class="string">"a1b2c3d4e5f6..."</span>,
+        <span class="key">"token_type"</span>: <span class="string">"Bearer"</span>,
+        <span class="key">"expires_in"</span>: <span class="number">900</span>,
+        <span class="key">"user"</span>: {
+            <span class="key">"id"</span>: <span class="number">5</span>,
+            <span class="key">"name"</span>: <span class="string">"John Doe"</span>,
+            <span class="key">"email"</span>: <span class="string">"john@example.com"</span>,
+            <span class="key">"phone"</span>: <span class="string">"+60123456789"</span>,
+            <span class="key">"reward_points"</span>: <span class="number">120</span>,
+            <span class="key">"status"</span>: <span class="string">"active"</span>
+        }
+    }
+}
+                        </div>
+
+                        <h4>Using the tokens</h4>
+                        <div class="info-box info">
+                            <p>
+                                <strong>After login:</strong><br>
+                                &bull; Store <code>access_token</code> in memory — use it for API calls via <code>Authorization: Bearer &lt;access_token&gt;</code><br>
+                                &bull; Store <code>refresh_token</code> securely — use it to get new tokens when access token expires<br>
+                                &bull; <code>expires_in</code> = seconds until access token expires (900 = 15 minutes)
+                            </p>
+                        </div>
+
+                        <h4>Error Responses</h4>
+                        <div class="response-label response-error">401 Unauthorized</div>
+                        <div class="code-block">
+{
+    <span class="key">"status"</span>: <span class="string">"error"</span>,
+    <span class="key">"message"</span>: <span class="string">"Invalid email or password"</span>,
+    <span class="key">"code"</span>: <span class="number">401</span>
+}
+                        </div>
+
+                        <div class="response-label response-error">403 Forbidden</div>
+                        <div class="code-block">
+{
+    <span class="key">"status"</span>: <span class="string">"error"</span>,
+    <span class="key">"message"</span>: <span class="string">"User account is blocked"</span>,
+    <span class="key">"code"</span>: <span class="number">403</span>
+}
+                        </div>
+
+                        <div class="info-box info">
+                            <p><strong>Note:</strong> Users who registered exclusively through social login (Google/Facebook) and have no password set cannot use this endpoint. They should use the <a href="#auth-endpoint">Auth (Social)</a> endpoint instead.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Refresh Token Endpoint -->
+            <section id="refresh-token-endpoint" class="docs-section">
+                <h2><iconify-icon icon="material-symbols:refresh-rounded"></iconify-icon> Refresh Token</h2>
+                <p>Get a new access token using a valid refresh token. The old refresh token is revoked and a new pair is issued (rotation). <span class="auth-badge">API Key Required</span></p>
+
+                <!-- POST /refresh-token -->
+                <div class="endpoint-card">
+                    <div class="endpoint-header" onclick="this.parentElement.classList.toggle('open')">
+                        <span class="method-badge method-post">POST</span>
+                        <span class="endpoint-path">/api/v1/refresh-token</span>
+                        <span class="auth-badge">API Key</span>
+                        <span class="endpoint-desc">Refresh access token</span>
+                        <iconify-icon class="endpoint-toggle" icon="material-symbols:expand-more-rounded"></iconify-icon>
+                    </div>
+                    <div class="endpoint-body">
+                        <p>Exchanges a valid refresh token for a new access token + refresh token pair. The old refresh token is <strong>deleted</strong> after use (one-time use rotation for security).</p>
+
+                        <h4>Request Body</h4>
+                        <table class="params-table">
+                            <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>refresh_token</code></td>
+                                    <td>string</td>
+                                    <td><span class="param-required">required</span> The refresh token received from login/auth</td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <h4>Example Request</h4>
+                        <div class="code-block">
+<button class="copy-btn" onclick="copyCode(this)">Copy</button>
+<span class="keyword">POST</span> <span class="url"><?= ROOT ?>/api/v1/refresh-token</span>
+<span class="comment"># Header:</span>
+Authorization: Bearer <span class="string">your_api_key</span>
+Content-Type: application/json
+
+{
+    <span class="key">"refresh_token"</span>: <span class="string">"a1b2c3d4e5f6..."</span>
+}
+                        </div>
+
+                        <h4>Response</h4>
+                        <div class="response-label response-success">200 OK</div>
+                        <div class="code-block">
+{
+    <span class="key">"status"</span>: <span class="string">"success"</span>,
+    <span class="key">"message"</span>: <span class="string">"Token refreshed successfully"</span>,
+    <span class="key">"code"</span>: <span class="number">200</span>,
+    <span class="key">"data"</span>: {
+        <span class="key">"access_token"</span>: <span class="string">"eyJhbGciOiJIUzI1NiIs..."</span>,
+        <span class="key">"refresh_token"</span>: <span class="string">"x9y8z7w6v5u4..."</span>,
+        <span class="key">"token_type"</span>: <span class="string">"Bearer"</span>,
+        <span class="key">"expires_in"</span>: <span class="number">900</span>,
+        <span class="key">"user"</span>: { ... }
+    }
+}
+                        </div>
+
+                        <h4>Error Responses</h4>
+                        <div class="response-label response-error">401 Unauthorized</div>
+                        <p>Invalid or expired refresh token.</p>
+                        <div class="response-label response-error">403 Forbidden</div>
+                        <p>User account is blocked (all refresh tokens revoked).</p>
+
+                        <div class="info-box warning">
+                            <p><strong><iconify-icon icon="material-symbols:warning-outline-rounded" style="vertical-align: middle;"></iconify-icon> Important</strong> Each refresh token can only be used <strong>once</strong>. After use, store the new refresh token from the response. If a refresh token is reused, it may indicate token theft.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Logout Endpoint -->
+            <section id="logout-endpoint" class="docs-section">
+                <h2><iconify-icon icon="material-symbols:logout-rounded"></iconify-icon> Logout</h2>
+                <p>Revoke a refresh token to log the user out. <span class="auth-badge">API Key Required</span></p>
+
+                <!-- POST /logout -->
+                <div class="endpoint-card">
+                    <div class="endpoint-header" onclick="this.parentElement.classList.toggle('open')">
+                        <span class="method-badge method-post">POST</span>
+                        <span class="endpoint-path">/api/v1/logout</span>
+                        <span class="auth-badge">API Key</span>
+                        <span class="endpoint-desc">Logout / revoke token</span>
+                        <iconify-icon class="endpoint-toggle" icon="material-symbols:expand-more-rounded"></iconify-icon>
+                    </div>
+                    <div class="endpoint-body">
+                        <p>Deletes the specified refresh token from the server. The user's current access token will remain valid until it naturally expires (max 15 minutes), but they won't be able to get new tokens.</p>
+
+                        <h4>Request Body</h4>
+                        <table class="params-table">
+                            <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>refresh_token</code></td>
+                                    <td>string</td>
+                                    <td><span class="param-required">required</span> The refresh token to revoke</td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <h4>Example Request</h4>
+                        <div class="code-block">
+<button class="copy-btn" onclick="copyCode(this)">Copy</button>
+<span class="keyword">POST</span> <span class="url"><?= ROOT ?>/api/v1/logout</span>
+<span class="comment"># Header:</span>
+Authorization: Bearer <span class="string">your_api_key</span>
+Content-Type: application/json
+
+{
+    <span class="key">"refresh_token"</span>: <span class="string">"a1b2c3d4e5f6..."</span>
+}
+                        </div>
+
+                        <h4>Response</h4>
+                        <div class="response-label response-success">200 OK</div>
+                        <div class="code-block">
+{
+    <span class="key">"status"</span>: <span class="string">"success"</span>,
+    <span class="key">"message"</span>: <span class="string">"Logged out successfully"</span>,
+    <span class="key">"code"</span>: <span class="number">200</span>,
+    <span class="key">"data"</span>: <span class="keyword">null</span>
 }
                         </div>
                     </div>

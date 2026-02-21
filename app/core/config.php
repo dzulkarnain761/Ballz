@@ -42,3 +42,24 @@ define('API_PUBLIC_ENDPOINTS', [
     'vouchers',
     'rewards',
 ]);
+
+/**
+ * JWT Configuration
+ * Generate a new secret using: bin2hex(random_bytes(32))
+ */
+define('JWT_SECRET', 'bz_jwt_a7c9f2e1d4b8036f5e9a1c7d2b4e8f0a3d6c9b2e5f8a1d4c7b0e3f6a9d2c5b');
+
+// Endpoints that require JWT token (user-level auth) instead of API key
+define('JWT_PROTECTED_ENDPOINTS', [
+    'users',
+    'orders',
+    'reward-transactions',
+]);
+
+// Endpoints that are auth endpoints (require API key, issue JWT)
+define('JWT_AUTH_ENDPOINTS', [
+    'login',
+    'auth',
+    'refresh-token',
+    'logout',
+]);

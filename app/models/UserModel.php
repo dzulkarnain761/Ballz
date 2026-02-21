@@ -88,6 +88,33 @@ class UserModel
     }
 
     /**
+     * Authenticate user by email and password
+     * 
+     * @param string $email User email
+     * @param string $password Plain-text password
+     * @return array|null User data if credentials are valid, null otherwise
+     */
+    public function authenticateByEmail($email, $password)
+    {
+        $user = $this->getByEmail($email);
+
+        if (!$user) {
+            return null;
+        }
+
+        // User has no password set (social-only account)
+        if (empty($user['password'])) {
+            return null;
+        }
+
+        if (!password_verify($password, $user['password'])) {
+            return null;
+        }
+
+        return $user;
+    }
+
+    /**
      * Find user by OAuth provider identity
      * 
      * @param string $providerName Provider name (google, facebook)
@@ -184,5 +211,73 @@ class UserModel
 
         // Return the newly created user
         return $this->getOne($userId);
+    }
+
+    // ─── Refresh Token Methods ───
+
+    /**
+     * Store a hashed refresh token in the database
+     * 
+     * @param int $userId
+     * @param string $tokenHash SHA-256 hash of the token
+     * @param string $expiresAt Expiry datetime string
+     * @return bool
+     */
+    public function storeRefreshToken($userId, $tokenHash, $expiresAt)
+    {
+        $this->query("INSERT INTO refresh_tokens (user_id, token_hash, expires_at) VALUES (?, ?, ?)");
+        $this->bind("iss", $userId, $tokenHash, $expiresAt);
+        return $this->execute();
+    }
+
+    /**
+     * Find a refresh token by its hash
+     * 
+     * @param string $tokenHash
+     * @return array|null
+     */
+    public function findRefreshToken($tokenHash)
+    {
+        $this->query("SELECT * FROM refresh_tokens WHERE token_hash = ?");
+        $this->bind("s", $tokenHash);
+        $result = $this->resultSet();
+        return $result && count($result) > 0 ? $result[0] : null;
+    }
+
+    /**
+     * Delete a specific refresh token by hash
+     * 
+     * @param string $tokenHash
+     * @return bool
+     */
+    public function deleteRefreshToken($tokenHash)
+    {
+        $this->query("DELETE FROM refresh_tokens WHERE token_hash = ?");
+        $this->bind("s", $tokenHash);
+        return $this->execute();
+    }
+
+    /**
+     * Delete all refresh tokens for a user (logout from all devices)
+     * 
+     * @param int $userId
+     * @return bool
+     */
+    public function deleteRefreshTokensByUserId($userId)
+    {
+        $this->query("DELETE FROM refresh_tokens WHERE user_id = ?");
+        $this->bind("i", $userId);
+        return $this->execute();
+    }
+
+    /**
+     * Clean up expired refresh tokens
+     * 
+     * @return bool
+     */
+    public function cleanExpiredRefreshTokens()
+    {
+        $this->query("DELETE FROM refresh_tokens WHERE expires_at < NOW()");
+        return $this->execute();
     }
 }

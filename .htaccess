@@ -1,5 +1,8 @@
 RewriteEngine On
 RewriteBase /Ballz/
 
+# Pass Authorization header through rewrites
+SetEnvIf Authorization "(.+)" HTTP_AUTHORIZATION=$1
+
 RewriteCond %{REQUEST_URI} !^/Ballz/public/
 RewriteRule ^(.*)$ /Ballz/public/$1 [L]

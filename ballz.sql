@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Feb 15, 2026 at 02:37 PM
+-- Generation Time: Feb 15, 2026 at 06:59 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -176,6 +176,20 @@ INSERT INTO `outlets` (`id`, `code`, `name`, `address`, `city`, `state`, `latitu
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `refresh_tokens`
+--
+
+CREATE TABLE `refresh_tokens` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `user_id` bigint(20) UNSIGNED NOT NULL,
+  `token_hash` varchar(64) NOT NULL COMMENT 'SHA-256 hash of the refresh token',
+  `expires_at` datetime NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `reward_items`
 --
 
@@ -230,7 +244,8 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `name`, `email`, `phone`, `password`, `reward_points`, `status`, `created_at`) VALUES
-(1, 'Muhammad Dzulkarnain', 'dzulkarnain761@gmail.com', NULL, NULL, 0, '', '2026-01-15 05:04:19');
+(1, 'Muhammad Dzulkarnain', 'dzulkarnain761@gmail.com', NULL, NULL, 30, 'active', '2026-01-15 05:04:19'),
+(2, 'John Doe', 'john@example.com', '+60123456789', NULL, 100, 'active', '2026-02-15 15:42:37');
 
 -- --------------------------------------------------------
 
@@ -244,6 +259,13 @@ CREATE TABLE `user_identities` (
   `provider_name` enum('google','facebook') NOT NULL,
   `provider_user_id` int(30) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `user_identities`
+--
+
+INSERT INTO `user_identities` (`id`, `user_id`, `provider_name`, `provider_user_id`) VALUES
+(1, 2, 'google', 123456789);
 
 -- --------------------------------------------------------
 
@@ -353,6 +375,14 @@ ALTER TABLE `outlets`
   ADD UNIQUE KEY `code` (`code`);
 
 --
+-- Indexes for table `refresh_tokens`
+--
+ALTER TABLE `refresh_tokens`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `idx_token_hash` (`token_hash`),
+  ADD KEY `idx_refresh_user` (`user_id`);
+
+--
 -- Indexes for table `reward_items`
 --
 ALTER TABLE `reward_items`
@@ -409,7 +439,7 @@ ALTER TABLE `admin`
 -- AUTO_INCREMENT for table `menu_categories`
 --
 ALTER TABLE `menu_categories`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- AUTO_INCREMENT for table `menu_items`
@@ -442,6 +472,12 @@ ALTER TABLE `outlets`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
+-- AUTO_INCREMENT for table `refresh_tokens`
+--
+ALTER TABLE `refresh_tokens`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `reward_items`
 --
 ALTER TABLE `reward_items`
@@ -457,13 +493,13 @@ ALTER TABLE `reward_transactions`
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `user_identities`
 --
 ALTER TABLE `user_identities`
-  MODIFY `id` int(30) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(30) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `vouchers`
@@ -507,6 +543,12 @@ ALTER TABLE `order_items`
 ALTER TABLE `order_vouchers`
   ADD CONSTRAINT `fk_order_voucher_order` FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `fk_order_voucher_voucher` FOREIGN KEY (`voucher_id`) REFERENCES `vouchers` (`id`);
+
+--
+-- Constraints for table `refresh_tokens`
+--
+ALTER TABLE `refresh_tokens`
+  ADD CONSTRAINT `fk_refresh_token_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `reward_items`

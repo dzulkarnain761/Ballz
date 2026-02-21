@@ -554,43 +554,63 @@
             <button class="endpoint-btn" data-method="GET" data-path="/api/v1/rewards/{id}" data-desc="Get a specific reward item by ID (public)" data-placeholder-id="reward_id">
                 <span class="method-badge method-GET">GET</span> Reward
             </button>
-            <button class="endpoint-btn" data-method="GET" data-path="/api/v1/reward-transactions" data-desc="Get all reward transactions (requires API key)">
+            <button class="endpoint-btn" data-method="GET" data-path="/api/v1/reward-transactions" data-desc="Get all reward transactions (requires JWT token)">
                 <span class="method-badge method-GET">GET</span> All Transactions
             </button>
-            <button class="endpoint-btn" data-method="GET" data-path="/api/v1/reward-transactions/{id}" data-desc="Get a specific reward transaction (requires API key)" data-placeholder-id="transaction_id">
+            <button class="endpoint-btn" data-method="GET" data-path="/api/v1/reward-transactions/{id}" data-desc="Get a specific reward transaction (requires JWT token)" data-placeholder-id="transaction_id">
                 <span class="method-badge method-GET">GET</span> Transaction
             </button>
         </div>
 
         <div class="endpoint-group">
             <div class="group-title">Users</div>
-            <button class="endpoint-btn" data-method="GET" data-path="/api/v1/users" data-desc="Get all users (requires API key). Returns users without passwords.">
+            <button class="endpoint-btn" data-method="GET" data-path="/api/v1/users" data-desc="Get all users (requires JWT token). Returns users without passwords.">
                 <span class="method-badge method-GET">GET</span> Users List
             </button>
-            <button class="endpoint-btn" data-method="GET" data-path="/api/v1/users/{id}" data-desc="Get a specific user. Query: <code>include_orders=true</code>, <code>order_details=true</code> (requires API key)" data-placeholder-id="user_id">
+            <button class="endpoint-btn" data-method="GET" data-path="/api/v1/users/{id}" data-desc="Get a specific user. Query: <code>include_orders=true</code>, <code>order_details=true</code> (requires JWT token)" data-placeholder-id="user_id">
                 <span class="method-badge method-GET">GET</span> User
             </button>
-            <button class="endpoint-btn" data-method="GET" data-path="/api/v1/users/{id}/orders" data-desc="Get all orders for a user. Query: <code>details=true</code> for full order details (requires API key)" data-placeholder-id="user_id">
+            <button class="endpoint-btn" data-method="GET" data-path="/api/v1/users/{id}/orders" data-desc="Get all orders for a user. Query: <code>details=true</code> for full order details (requires JWT token)" data-placeholder-id="user_id">
                 <span class="method-badge method-GET">GET</span> User Orders
             </button>
-            <button class="endpoint-btn" data-method="GET" data-path="/api/v1/users/{id}/reward-transactions" data-desc="Get reward transactions for a user (requires API key)" data-placeholder-id="user_id">
+            <button class="endpoint-btn" data-method="GET" data-path="/api/v1/users/{id}/reward-transactions" data-desc="Get reward transactions for a user (requires JWT token)" data-placeholder-id="user_id">
                 <span class="method-badge method-GET">GET</span> User Rewards
             </button>
         </div>
 
         <!-- POST Endpoints -->
         <div class="endpoint-group">
-            <div class="group-title">Actions</div>
-            <button class="endpoint-btn" data-method="POST" data-path="/api/v1/auth" data-desc="Check existing user or register new user via social provider (requires API key)" data-body='{
+            <div class="group-title">Auth</div>
+            <button class="endpoint-btn" data-method="POST" data-path="/api/v1/login" data-desc="Login with email and password (requires API key). Returns JWT tokens." data-body='{
+  "email": "john@example.com",
+  "password": "mypassword123"
+}'>
+                <span class="method-badge method-POST">POST</span> Login
+            </button>
+            <button class="endpoint-btn" data-method="POST" data-path="/api/v1/auth" data-desc="Check existing user or register new user via social provider (requires API key). Returns JWT tokens." data-body='{
   "provider": "google",
   "provider_user_id": "123456789",
   "name": "John Doe",
   "email": "john@example.com",
   "phone": "+60123456789"
 }'>
-                <span class="method-badge method-POST">POST</span> Auth Check
+                <span class="method-badge method-POST">POST</span> Auth (Social)
             </button>
-            <button class="endpoint-btn" data-method="POST" data-path="/api/v1/orders" data-desc="Create a new order with items and optional voucher codes (requires API key)" data-body='{
+            <button class="endpoint-btn" data-method="POST" data-path="/api/v1/refresh-token" data-desc="Exchange refresh token for new access + refresh token pair (requires API key)" data-body='{
+  "refresh_token": ""
+}'>
+                <span class="method-badge method-POST">POST</span> Refresh Token
+            </button>
+            <button class="endpoint-btn" data-method="POST" data-path="/api/v1/logout" data-desc="Revoke a refresh token (requires API key)" data-body='{
+  "refresh_token": ""
+}'>
+                <span class="method-badge method-POST">POST</span> Logout
+            </button>
+        </div>
+
+        <div class="endpoint-group">
+            <div class="group-title">Actions</div>
+            <button class="endpoint-btn" data-method="POST" data-path="/api/v1/orders" data-desc="Create a new order with items and optional voucher codes (requires JWT token)" data-body='{
   "user_id": 1,
   "outlet_id": 1,
   "order_type": "pickup",
@@ -604,7 +624,7 @@
 }'>
                 <span class="method-badge method-POST">POST</span> Create Order
             </button>
-            <button class="endpoint-btn" data-method="POST" data-path="/api/v1/reward-transactions" data-desc="Create a reward transaction — earn or redeem points (requires API key)" data-body='{
+            <button class="endpoint-btn" data-method="POST" data-path="/api/v1/reward-transactions" data-desc="Create a reward transaction — earn or redeem points (requires JWT token)" data-body='{
   "user_id": 1,
   "type": "redeem",
   "reward_item_id": 1,
@@ -625,7 +645,11 @@
             </div>
             <div>
                 <label>API Key</label>
-                <input type="text" id="apiKey" value="" placeholder="Paste API key or leave empty for public endpoints">
+                <input type="text" id="apiKey" value="" placeholder="For login/auth/refresh/logout endpoints">
+            </div>
+            <div>
+                <label>JWT Token</label>
+                <input type="text" id="jwtToken" value="" placeholder="access_token from login response" style="width:520px;">
             </div>
         </div>
 
@@ -853,6 +877,14 @@ async function sendRequest() {
         headers['Authorization'] = 'Bearer ' + apiKey;
     }
 
+    // Override with JWT token for protected endpoints
+    const jwtToken = document.getElementById('jwtToken').value.trim();
+    const jwtEndpoints = ['/users', '/orders', '/reward-transactions'];
+    const needsJwt = jwtEndpoints.some(ep => path.includes(ep));
+    if (jwtToken && needsJwt) {
+        headers['Authorization'] = 'Bearer ' + jwtToken;
+    }
+
     // Build fetch options
     const opts = { method, headers };
 
@@ -904,6 +936,13 @@ async function sendRequest() {
         try {
             const json = JSON.parse(text);
             document.getElementById('resContent').innerHTML = syntaxHighlight(JSON.stringify(json, null, 2));
+
+            // Auto-fill JWT token from login/auth/refresh response
+            if (json.data && json.data.access_token) {
+                document.getElementById('jwtToken').value = json.data.access_token;
+                document.getElementById('jwtToken').style.borderColor = '#22c55e';
+                setTimeout(() => document.getElementById('jwtToken').style.borderColor = '', 2000);
+            }
         } catch {
             document.getElementById('resContent').textContent = text;
         }

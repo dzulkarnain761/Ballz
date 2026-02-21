@@ -34,6 +34,6 @@ define('OAUTH_PROVIDERS', [
 ]);
 
 // Token Lifetimes
-define('ACCESS_TOKEN_LIFETIME', 3600);      // 1 hour
-define('REFRESH_TOKEN_LIFETIME', 2592000);  // 30 days
+define('ACCESS_TOKEN_LIFETIME', 900);        // 15 minutes (JWT access token)
+define('REFRESH_TOKEN_LIFETIME', 2592000);  // 30 days (JWT refresh token)
 define('OAUTH_STATE_LIFETIME', 600);        // 10 minutes

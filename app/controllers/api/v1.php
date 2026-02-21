@@ -687,6 +687,15 @@ class v1 extends Api
             case 'auth':
                 $this->handleAuthCheck();
                 break;
+            case 'login':
+                $this->handleLogin();
+                break;
+            case 'refresh-token':
+                $this->handleRefreshToken();
+                break;
+            case 'logout':
+                $this->handleLogout();
+                break;
             case 'orders':
                 $this->handleCreateOrder();
                 break;
@@ -699,7 +708,69 @@ class v1 extends Api
     }
 
     /**
+     * POST /api/v1/login - Authenticate user with email and password
+     * Returns JWT access token and refresh token
+     * 
+     * Request body:
+     * {
+     *   "email": "user@example.com",   (required)
+     *   "password": "secret"            (required)
+     * }
+     * 
+     * Response: JWT tokens + user data on success
+     */
+    private function handleLogin()
+    {
+        try {
+            $data = $this->getRequestData();
+
+            // Validate required fields
+            if (empty($data['email'])) {
+                $this->sendError('Email is required', 400);
+                return;
+            }
+
+            if (empty($data['password'])) {
+                $this->sendError('Password is required', 400);
+                return;
+            }
+
+            // Validate email format
+            if (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
+                $this->sendError('Invalid email format', 400);
+                return;
+            }
+
+            // Authenticate
+            $user = $this->userModel->authenticateByEmail($data['email'], $data['password']);
+
+            if (!$user) {
+                $this->sendError('Invalid email or password', 401);
+                return;
+            }
+
+            // Check if user is active
+            if ($user['status'] !== 'active') {
+                $this->sendError('User account is blocked', 403);
+                return;
+            }
+
+            // Remove sensitive data
+            unset($user['password']);
+
+            // Generate JWT tokens
+            $response = $this->issueJwtTokens($user);
+
+            $this->sendResponse($response, 'Login successful');
+
+        } catch (Exception $e) {
+            $this->sendError('Login failed: ' . $e->getMessage(), 500);
+        }
+    }
+
+    /**
      * POST /api/v1/auth - Check existing user or register new user
+     * Returns JWT access token and refresh token
      * 
      * Request body:
      * {
@@ -711,8 +782,8 @@ class v1 extends Api
      * }
      * 
      * Response:
-     * - If user exists: returns user data with is_new_user = false
-     * - If new user: creates user and returns data with is_new_user = true
+     * - If user exists: returns JWT tokens + user data with is_new_user = false
+     * - If new user: creates user and returns JWT tokens + data with is_new_user = true
      */
     private function handleAuthCheck()
     {
@@ -748,10 +819,12 @@ class v1 extends Api
             $existingUser = $this->userModel->findByProviderIdentity($provider, $providerUserId);
 
             if ($existingUser) {
-                // User exists, return user data
+                // User exists, return JWT tokens + user data
                 $existingUser['is_new_user'] = false;
-                unset($existingUser['password']); // Remove sensitive data
-                $this->sendResponse($existingUser, 'User found');
+                unset($existingUser['password']);
+
+                $response = $this->issueJwtTokens($existingUser);
+                $this->sendResponse($response, 'User found');
                 return;
             }
 
@@ -770,12 +843,142 @@ class v1 extends Api
             }
 
             $newUser['is_new_user'] = true;
-            unset($newUser['password']); // Remove sensitive data
-            $this->sendCreated($newUser, 'User registered successfully');
+            unset($newUser['password']);
+
+            $response = $this->issueJwtTokens($newUser);
+            $this->sendCreated($response, 'User registered successfully');
 
         } catch (Exception $e) {
             $this->sendError('Authentication failed: ' . $e->getMessage(), 500);
         }
+    }
+
+    /**
+     * POST /api/v1/refresh-token - Get new access token using refresh token
+     * 
+     * Request body:
+     * {
+     *   "refresh_token": "string" (required)
+     * }
+     */
+    private function handleRefreshToken()
+    {
+        try {
+            $data = $this->getRequestData();
+
+            if (empty($data['refresh_token'])) {
+                $this->sendError('refresh_token is required', 400);
+                return;
+            }
+
+            $rawToken = $data['refresh_token'];
+            $tokenHash = JWT::hashRefreshToken($rawToken);
+
+            // Find refresh token in database
+            $storedToken = $this->userModel->findRefreshToken($tokenHash);
+
+            if (!$storedToken) {
+                $this->sendUnauthorized('Invalid refresh token.');
+                return;
+            }
+
+            // Check if token is expired
+            if (strtotime($storedToken['expires_at']) < time()) {
+                // Clean up expired token
+                $this->userModel->deleteRefreshToken($tokenHash);
+                $this->sendUnauthorized('Refresh token has expired. Please login again.');
+                return;
+            }
+
+            // Get user
+            $user = $this->userModel->getOne($storedToken['user_id']);
+
+            if (!$user) {
+                $this->userModel->deleteRefreshToken($tokenHash);
+                $this->sendError('User not found', 404);
+                return;
+            }
+
+            if ($user['status'] !== 'active') {
+                $this->userModel->deleteRefreshTokensByUserId($user['id']);
+                $this->sendError('User account is blocked', 403);
+                return;
+            }
+
+            // Delete old refresh token (rotation: one-time use)
+            $this->userModel->deleteRefreshToken($tokenHash);
+
+            // Issue new token pair
+            unset($user['password']);
+            $response = $this->issueJwtTokens($user);
+
+            $this->sendResponse($response, 'Token refreshed successfully');
+
+        } catch (Exception $e) {
+            $this->sendError('Token refresh failed: ' . $e->getMessage(), 500);
+        }
+    }
+
+    /**
+     * POST /api/v1/logout - Revoke refresh token
+     * 
+     * Request body:
+     * {
+     *   "refresh_token": "string" (required)
+     * }
+     */
+    private function handleLogout()
+    {
+        try {
+            $data = $this->getRequestData();
+
+            if (empty($data['refresh_token'])) {
+                $this->sendError('refresh_token is required', 400);
+                return;
+            }
+
+            $tokenHash = JWT::hashRefreshToken($data['refresh_token']);
+            $this->userModel->deleteRefreshToken($tokenHash);
+
+            $this->sendResponse(null, 'Logged out successfully');
+
+        } catch (Exception $e) {
+            $this->sendError('Logout failed: ' . $e->getMessage(), 500);
+        }
+    }
+
+    /**
+     * Helper: Issue JWT access + refresh tokens for a user
+     * Stores the refresh token hash in the database
+     * 
+     * @param array $user User data (must have 'id', 'email')
+     * @return array Response with tokens + user data
+     */
+    private function issueJwtTokens($user)
+    {
+        // Create access token
+        $accessToken = JWT::createAccessToken([
+            'user_id' => (int)$user['id'],
+            'email' => $user['email'] ?? null,
+        ]);
+
+        // Create refresh token
+        $refreshData = JWT::createRefreshToken((int)$user['id']);
+
+        // Store refresh token hash in database
+        $this->userModel->storeRefreshToken(
+            (int)$user['id'],
+            $refreshData['token_hash'],
+            $refreshData['expires_at']
+        );
+
+        return [
+            'access_token' => $accessToken,
+            'refresh_token' => $refreshData['token'],
+            'token_type' => 'Bearer',
+            'expires_in' => defined('ACCESS_TOKEN_LIFETIME') ? ACCESS_TOKEN_LIFETIME : 900,
+            'user' => $user
+        ];
     }
 
     /**

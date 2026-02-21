@@ -1,4 +1,41 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // Mobile Menu Toggle
+    const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+    const navList = document.getElementById('navList');
+    if (mobileMenuToggle && navList) {
+        mobileMenuToggle.addEventListener('click', () => {
+            navList.classList.toggle('open');
+            const icon = mobileMenuToggle.querySelector('iconify-icon');
+            if (navList.classList.contains('open')) {
+                icon.setAttribute('icon', 'material-symbols:close-rounded');
+            } else {
+                icon.setAttribute('icon', 'material-symbols:menu-rounded');
+            }
+        });
+
+        // Close mobile menu when a link is clicked
+        navList.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', () => {
+                navList.classList.remove('open');
+                const icon = mobileMenuToggle.querySelector('iconify-icon');
+                icon.setAttribute('icon', 'material-symbols:menu-rounded');
+            });
+        });
+    }
+
+    // Smooth scroll for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            const targetId = this.getAttribute('href');
+            if (targetId === '#') return;
+            const target = document.querySelector(targetId);
+            if (target) {
+                e.preventDefault();
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        });
+    });
+
     // Menu Tab Switching
     const toggleBtns = document.querySelectorAll('.toggle-btn');
     const menuGrids = document.querySelectorAll('.menu-grid');
@@ -51,6 +88,36 @@ document.addEventListener('DOMContentLoaded', () => {
                 entry.target.classList.add('visible');
             }
         });
+    }, { threshold: 0.1 });
+
+    // Observe elements for scroll reveal
+    document.querySelectorAll('.feature-card, .menu-item-card, .app-feature, .about-stat, .hero-stat').forEach(el => {
+        el.style.opacity = '0';
+        el.style.transform = 'translateY(20px)';
+        el.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+        observer.observe(el);
+    });
+
+    // Add visible styles
+    const style = document.createElement('style');
+    style.textContent = '.visible { opacity: 1 !important; transform: translateY(0) !important; }';
+    document.head.appendChild(style);
+
+    // Stagger animation for grid items
+    const staggerObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const children = entry.target.querySelectorAll('.feature-card, .menu-item-card, .about-stat');
+                children.forEach((child, i) => {
+                    setTimeout(() => child.classList.add('visible'), i * 100);
+                });
+                staggerObserver.unobserve(entry.target);
+            }
+        });
+    }, { threshold: 0.1 });
+
+    document.querySelectorAll('.features-grid, .menu-grid, .about-stats').forEach(grid => {
+        staggerObserver.observe(grid);
     });
 
     // Sidebar Dropdown Toggle

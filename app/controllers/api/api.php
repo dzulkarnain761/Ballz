@@ -14,6 +14,8 @@ class Api
     private $requestData = [];
     protected $apiKeyName = null;  // Name of the validated API key
     protected $requiresApiKey = true; // Whether endpoints require API key by default
+    protected $jwtPayload = null;  // Decoded JWT payload for authenticated user
+    protected $authenticatedUserId = null; // User ID from JWT token
 
 
     public function __construct()
@@ -32,7 +34,7 @@ class Api
        
         $this->checkRateLimit();
         $this->parseRequest();
-        $this->validateApiKey();
+        $this->authenticate();
     }
 
     /**
@@ -102,6 +104,84 @@ class Api
         }
 
         $this->apiKeyName = $validKey;
+    }
+
+    /**
+     * Main authentication handler
+     * Routes to API key or JWT authentication based on endpoint configuration
+     */
+    private function authenticate()
+    {
+        // Public endpoints bypass all auth
+        if ($this->isPublicEndpoint()) {
+            return;
+        }
+
+        // JWT-protected endpoints: require a valid JWT access token
+        if ($this->isJwtProtectedEndpoint()) {
+            $this->validateJwtToken();
+            return;
+        }
+
+        // Auth endpoints (login, auth, refresh-token, logout): require API key
+        // These are used to *obtain* or *manage* JWT tokens
+        $this->validateApiKey();
+    }
+
+    /**
+     * Check if endpoint requires JWT token authentication
+     * 
+     * @return bool
+     */
+    protected function isJwtProtectedEndpoint()
+    {
+        if (defined('JWT_PROTECTED_ENDPOINTS') && is_array(JWT_PROTECTED_ENDPOINTS)) {
+            return in_array($this->endpoint, JWT_PROTECTED_ENDPOINTS);
+        }
+        return false;
+    }
+
+    /**
+     * Validate JWT access token from Authorization header
+     * Sets $this->jwtPayload and $this->authenticatedUserId on success
+     */
+    private function validateJwtToken()
+    {
+        $authHeader = $_SERVER['HTTP_AUTHORIZATION'] ?? $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ?? '';
+
+        if (!preg_match('/^Bearer\s+(.+)$/i', $authHeader, $matches)) {
+            $this->sendUnauthorized('JWT access token required. Use Authorization: Bearer <jwt_token>');
+        }
+
+        $token = trim($matches[1]);
+        $payload = JWT::validateAccessToken($token);
+
+        if (!$payload) {
+            $this->sendUnauthorized('Invalid or expired access token.');
+        }
+
+        $this->jwtPayload = $payload;
+        $this->authenticatedUserId = $payload['user_id'] ?? null;
+    }
+
+    /**
+     * Get the authenticated user ID from JWT token
+     * 
+     * @return int|null
+     */
+    protected function getAuthenticatedUserId()
+    {
+        return $this->authenticatedUserId;
+    }
+
+    /**
+     * Get the full JWT payload
+     * 
+     * @return array|null
+     */
+    protected function getJwtPayload()
+    {
+        return $this->jwtPayload;
     }
 
     /*
