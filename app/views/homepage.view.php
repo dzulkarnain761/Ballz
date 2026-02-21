@@ -20,8 +20,8 @@
     <header class="header">
         <div class="container header-container">
             <a href="#" class="logo">
-                <img src="<?= ROOT ?>/public/assets/logo-dark-removebg-preview.png" alt="Ballz" class="logo-img logo-img-dark">
-                <img src="<?= ROOT ?>/public/assets/logo-light-removebg-preview.png" alt="Ballz" class="logo-img logo-img-light">
+                <img src="<?= ROOT ?>/public/assets/logo-light-removebg-preview.png" alt="Ballz" class="logo-img logo-img-dark">
+                <img src="<?= ROOT ?>/public/assets/logo-dark-removebg-preview.png" alt="Ballz" class="logo-img logo-img-light">
             </a>
             <nav class="nav">
                 <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Open Menu">

@@ -633,6 +633,33 @@
                 <span class="method-badge method-POST">POST</span> Reward Transaction
             </button>
         </div>
+
+        <div class="endpoint-group">
+            <div class="group-title">Payments</div>
+            <button class="endpoint-btn" data-method="GET" data-path="/api/v1/payment-methods" data-desc="Get available payment methods & FPX banks (public)">
+                <span class="method-badge method-GET">GET</span> Payment Methods
+            </button>
+            <button class="endpoint-btn" data-method="POST" data-path="/api/v1/payments" data-desc="Initiate a payment for a pending order (requires JWT token)" data-body='{
+  "order_id": 1,
+  "payment_method": "fpx",
+  "bank_code": "MBB"
+}'>
+                <span class="method-badge method-POST">POST</span> Initiate Payment
+            </button>
+            <button class="endpoint-btn" data-method="GET" data-path="/api/v1/payments/1" data-desc="Get payment status by ID (requires JWT token)">
+                <span class="method-badge method-GET">GET</span> Get Payment
+            </button>
+            <button class="endpoint-btn" data-method="GET" data-path="/api/v1/payments" data-desc="Get all payments for authenticated user (requires JWT token)">
+                <span class="method-badge method-GET">GET</span> All Payments
+            </button>
+            <button class="endpoint-btn" data-method="POST" data-path="/api/v1/payment-callback" data-desc="Gateway callback — simulate payment result (public)" data-body='{
+  "payment_ref": "",
+  "status": "success",
+  "gateway_response": "Transaction approved by bank"
+}'>
+                <span class="method-badge method-POST">POST</span> Payment Callback
+            </button>
+        </div>
     </aside>
 
     <!-- Main Panel -->
@@ -879,7 +906,7 @@ async function sendRequest() {
 
     // Override with JWT token for protected endpoints
     const jwtToken = document.getElementById('jwtToken').value.trim();
-    const jwtEndpoints = ['/users', '/orders', '/reward-transactions'];
+    const jwtEndpoints = ['/users', '/orders', '/reward-transactions', '/payments'];
     const needsJwt = jwtEndpoints.some(ep => path.includes(ep));
     if (jwtToken && needsJwt) {
         headers['Authorization'] = 'Bearer ' + jwtToken;

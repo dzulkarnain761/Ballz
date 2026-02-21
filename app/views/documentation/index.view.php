@@ -642,6 +642,9 @@
                     <a href="#orders" class="docs-nav-link">
                         <iconify-icon icon="material-symbols:receipt-long-outline-rounded"></iconify-icon> Orders
                     </a>
+                    <a href="#payments" class="docs-nav-link">
+                        <iconify-icon icon="material-symbols:payments-outline-rounded"></iconify-icon> Payments
+                    </a>
                     <a href="#auth-endpoint" class="docs-nav-link">
                         <iconify-icon icon="material-symbols:login-rounded"></iconify-icon> Auth (Social)
                     </a>
@@ -737,7 +740,7 @@ Authorization: Bearer <span class="string">eyJhbGciOiJIUzI1NiIs...</span>
                     </thead>
                     <tbody>
                         <tr>
-                            <td><code>/menu</code>, <code>/outlets</code>, <code>/vouchers</code>, <code>/rewards</code></td>
+                            <td><code>/menu</code>, <code>/outlets</code>, <code>/vouchers</code>, <code>/rewards</code>, <code>/payment-methods</code>, <code>/payment-callback</code></td>
                             <td><span class="public-badge">Public</span> No auth needed</td>
                         </tr>
                         <tr>
@@ -745,7 +748,7 @@ Authorization: Bearer <span class="string">eyJhbGciOiJIUzI1NiIs...</span>
                             <td><span class="auth-badge">API Key</span> App-level key</td>
                         </tr>
                         <tr>
-                            <td><code>/users</code>, <code>/orders</code>, <code>/reward-transactions</code></td>
+                            <td><code>/users</code>, <code>/orders</code>, <code>/reward-transactions</code>, <code>/payments</code></td>
                             <td><span class="auth-badge">JWT Token</span> User access token</td>
                         </tr>
                     </tbody>
@@ -859,6 +862,12 @@ Authorization: Bearer <span class="string">eyJhbGciOiJIUzI1NiIs...</span>
                     </div>
                     <div class="status-item">
                         <span class="status-code status-4xx">422</span> Validation Error
+                    </div>
+                    <div class="status-item">
+                        <span class="status-code status-4xx">409</span> Conflict
+                    </div>
+                    <div class="status-item">
+                        <span class="status-code status-4xx">410</span> Gone (Expired)
                     </div>
                     <div class="status-item">
                         <span class="status-code status-4xx">429</span> Rate Limited
@@ -1796,6 +1805,387 @@ Content-Type: application/json
                         <p>User, outlet, or menu item not found.</p>
                         <div class="response-label response-error">403 Forbidden</div>
                         <p>User account is blocked.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Payments -->
+            <section id="payments" class="docs-section">
+                <h2><iconify-icon icon="material-symbols:payments-outline-rounded"></iconify-icon> Payments (FPX / DuitNow Simulation)</h2>
+                <p>Simulated payment gateway for FPX online banking and DuitNow QR payments. Designed for mobile app integration via WebView. <span class="auth-badge">JWT Token Required</span></p>
+
+                <div class="info-box info">
+                    <p>
+                        <strong>Payment Flow (Mobile App)</strong><br>
+                        1. Create an order → <code>POST /api/v1/orders</code><br>
+                        2. Get available payment methods → <code>GET /api/v1/payment-methods</code><br>
+                        3. Initiate payment → <code>POST /api/v1/payments</code> → receive <code>payment_url</code><br>
+                        4. Open <code>payment_url</code> in WebView → user sees FPX/DuitNow bank page<br>
+                        5. User approves/rejects → gateway calls callback → order status updated<br>
+                        6. Poll <code>GET /api/v1/payments/{id}</code> to confirm result
+                    </p>
+                </div>
+
+                <div class="info-box warning">
+                    <p><strong><iconify-icon icon="material-symbols:warning-outline-rounded" style="vertical-align: middle;"></iconify-icon> Simulation Mode</strong> This is a simulated gateway for development/testing. No real money is charged. The simulation page provides Approve/Reject buttons to simulate user actions at the bank.</p>
+                </div>
+
+                <!-- GET /payment-methods -->
+                <div class="endpoint-card">
+                    <div class="endpoint-header" onclick="this.parentElement.classList.toggle('open')">
+                        <span class="method-badge method-get">GET</span>
+                        <span class="endpoint-path">/api/v1/payment-methods</span>
+                        <span class="public-badge">Public</span>
+                        <span class="endpoint-desc">Get available payment methods & banks</span>
+                        <iconify-icon class="endpoint-toggle" icon="material-symbols:expand-more-rounded"></iconify-icon>
+                    </div>
+                    <div class="endpoint-body">
+                        <p>Returns available payment methods (FPX and DuitNow) along with the FPX bank list and their online/offline status. Use this to populate the payment method selection in your mobile app.</p>
+
+                        <h4>Example Request</h4>
+                        <div class="code-block">
+<button class="copy-btn" onclick="copyCode(this)">Copy</button>
+<span class="keyword">GET</span> <span class="url"><?= ROOT ?>/api/v1/payment-methods</span>
+                        </div>
+
+                        <h4>Response</h4>
+                        <div class="response-label response-success">200 OK</div>
+                        <div class="code-block">
+{
+    <span class="key">"status"</span>: <span class="string">"success"</span>,
+    <span class="key">"message"</span>: <span class="string">"Payment methods retrieved successfully"</span>,
+    <span class="key">"code"</span>: <span class="number">200</span>,
+    <span class="key">"data"</span>: {
+        <span class="key">"payment_methods"</span>: [
+            {
+                <span class="key">"code"</span>: <span class="string">"fpx"</span>,
+                <span class="key">"name"</span>: <span class="string">"FPX Online Banking"</span>,
+                <span class="key">"description"</span>: <span class="string">"Pay using your bank's online banking"</span>,
+                <span class="key">"icon"</span>: <span class="string">"fpx"</span>,
+                <span class="key">"banks"</span>: [
+                    {
+                        <span class="key">"code"</span>: <span class="string">"MBB"</span>,
+                        <span class="key">"name"</span>: <span class="string">"Maybank2u"</span>,
+                        <span class="key">"status"</span>: <span class="string">"online"</span>
+                    },
+                    {
+                        <span class="key">"code"</span>: <span class="string">"CIMB"</span>,
+                        <span class="key">"name"</span>: <span class="string">"CIMB Clicks"</span>,
+                        <span class="key">"status"</span>: <span class="string">"online"</span>
+                    },
+                    <span class="comment">// ... more banks</span>
+                ]
+            },
+            {
+                <span class="key">"code"</span>: <span class="string">"duitnow"</span>,
+                <span class="key">"name"</span>: <span class="string">"DuitNow QR"</span>,
+                <span class="key">"description"</span>: <span class="string">"Scan &amp; pay with any DuitNow-supported banking app"</span>,
+                <span class="key">"icon"</span>: <span class="string">"duitnow"</span>,
+                <span class="key">"banks"</span>: []
+            }
+        ]
+    }
+}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- POST /payments -->
+                <div class="endpoint-card">
+                    <div class="endpoint-header" onclick="this.parentElement.classList.toggle('open')">
+                        <span class="method-badge method-post">POST</span>
+                        <span class="endpoint-path">/api/v1/payments</span>
+                        <span class="auth-badge">JWT Token</span>
+                        <span class="endpoint-desc">Initiate a payment</span>
+                        <iconify-icon class="endpoint-toggle" icon="material-symbols:expand-more-rounded"></iconify-icon>
+                    </div>
+                    <div class="endpoint-body">
+                        <p>Initiates a payment for a pending order. Returns a <code>payment_url</code> that should be opened in a WebView for the user to complete the payment. The payment session expires in 15 minutes.</p>
+
+                        <h4>Request Body</h4>
+                        <table class="params-table">
+                            <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>order_id</code></td>
+                                    <td>integer</td>
+                                    <td><span class="param-required">required</span> ID of the pending order to pay for</td>
+                                </tr>
+                                <tr>
+                                    <td><code>payment_method</code></td>
+                                    <td>string</td>
+                                    <td><span class="param-required">required</span> <code>fpx</code> or <code>duitnow</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>bank_code</code></td>
+                                    <td>string</td>
+                                    <td><span class="param-required">required for FPX</span> Bank code from <code>/payment-methods</code> response (e.g., <code>MBB</code>, <code>CIMB</code>)</td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <h4>Example Request (FPX)</h4>
+                        <div class="code-block">
+<button class="copy-btn" onclick="copyCode(this)">Copy</button>
+<span class="keyword">POST</span> <span class="url"><?= ROOT ?>/api/v1/payments</span>
+<span class="comment"># Header:</span>
+Authorization: Bearer <span class="string">your_jwt_token</span>
+Content-Type: application/json
+
+{
+    <span class="key">"order_id"</span>: <span class="number">1</span>,
+    <span class="key">"payment_method"</span>: <span class="string">"fpx"</span>,
+    <span class="key">"bank_code"</span>: <span class="string">"MBB"</span>
+}
+                        </div>
+
+                        <h4>Example Request (DuitNow)</h4>
+                        <div class="code-block">
+<button class="copy-btn" onclick="copyCode(this)">Copy</button>
+<span class="keyword">POST</span> <span class="url"><?= ROOT ?>/api/v1/payments</span>
+<span class="comment"># Header:</span>
+Authorization: Bearer <span class="string">your_jwt_token</span>
+Content-Type: application/json
+
+{
+    <span class="key">"order_id"</span>: <span class="number">1</span>,
+    <span class="key">"payment_method"</span>: <span class="string">"duitnow"</span>
+}
+                        </div>
+
+                        <h4>Response</h4>
+                        <div class="response-label response-success">201 Created</div>
+                        <div class="code-block">
+{
+    <span class="key">"status"</span>: <span class="string">"success"</span>,
+    <span class="key">"message"</span>: <span class="string">"Payment initiated successfully"</span>,
+    <span class="key">"code"</span>: <span class="number">201</span>,
+    <span class="key">"data"</span>: {
+        <span class="key">"payment_id"</span>: <span class="number">1</span>,
+        <span class="key">"payment_ref"</span>: <span class="string">"BZ-FPX-20260221143500-A1B2C3D4"</span>,
+        <span class="key">"payment_method"</span>: <span class="string">"fpx"</span>,
+        <span class="key">"bank_code"</span>: <span class="string">"MBB"</span>,
+        <span class="key">"amount"</span>: <span class="number">20.70</span>,
+        <span class="key">"currency"</span>: <span class="string">"MYR"</span>,
+        <span class="key">"payment_url"</span>: <span class="string">"<?= ROOT ?>/payment/gateway?ref=BZ-FPX-20260221..."</span>,
+        <span class="key">"status"</span>: <span class="string">"pending"</span>,
+        <span class="key">"expires_at"</span>: <span class="string">"2026-02-21 14:50:00"</span>
+    }
+}
+                        </div>
+
+                        <h4>Mobile Integration</h4>
+                        <div class="info-box info">
+                            <p>
+                                <strong>Open <code>payment_url</code> in a WebView:</strong><br>
+                                &bull; <strong>React Native:</strong> Use <code>react-native-webview</code> — listen for <code>onMessage</code> with <code>type: "payment_complete"</code><br>
+                                &bull; <strong>Flutter:</strong> Use <code>webview_flutter</code> — listen for JavaScript channel messages<br>
+                                &bull; <strong>Polling fallback:</strong> Poll <code>GET /api/v1/payments/{payment_id}</code> every 2-3 seconds until status changes from <code>pending</code>
+                            </p>
+                        </div>
+
+                        <h4>Validation Rules</h4>
+                        <div class="info-box">
+                            <p>
+                                <strong>Payment Validation</strong>
+                                &bull; Order must exist and be in <code>pending</code> status<br>
+                                &bull; Order must not already have a successful payment<br>
+                                &bull; For FPX: <code>bank_code</code> must be valid and the bank must be <code>online</code><br>
+                                &bull; Any existing pending payment for the order is automatically expired
+                            </p>
+                        </div>
+
+                        <h4>Error Responses</h4>
+                        <div class="response-label response-error">400 Bad Request</div>
+                        <p>Missing fields, invalid payment method, or order not in pending status.</p>
+                        <div class="response-label response-error">404 Not Found</div>
+                        <p>Order not found.</p>
+                        <div class="response-label response-error">409 Conflict</div>
+                        <p>Order has already been paid.</p>
+                        <div class="response-label response-error">503 Service Unavailable</div>
+                        <p>Selected bank is offline.</p>
+                    </div>
+                </div>
+
+                <!-- GET /payments/{id} -->
+                <div class="endpoint-card">
+                    <div class="endpoint-header" onclick="this.parentElement.classList.toggle('open')">
+                        <span class="method-badge method-get">GET</span>
+                        <span class="endpoint-path">/api/v1/payments/{id}</span>
+                        <span class="auth-badge">JWT Token</span>
+                        <span class="endpoint-desc">Get payment status</span>
+                        <iconify-icon class="endpoint-toggle" icon="material-symbols:expand-more-rounded"></iconify-icon>
+                    </div>
+                    <div class="endpoint-body">
+                        <p>Returns the current status of a payment. Use this to poll for payment completion from the mobile app while the user is on the gateway page.</p>
+
+                        <h4>Path Parameters</h4>
+                        <table class="params-table">
+                            <thead><tr><th>Param</th><th>Type</th><th>Description</th></tr></thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>id</code></td>
+                                    <td>integer</td>
+                                    <td><span class="param-required">required</span> Payment ID</td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <h4>Example Request</h4>
+                        <div class="code-block">
+<button class="copy-btn" onclick="copyCode(this)">Copy</button>
+<span class="keyword">GET</span> <span class="url"><?= ROOT ?>/api/v1/payments/1</span>
+<span class="comment"># Header:</span>
+Authorization: Bearer <span class="string">your_jwt_token</span>
+                        </div>
+
+                        <h4>Response</h4>
+                        <div class="response-label response-success">200 OK</div>
+                        <div class="code-block">
+{
+    <span class="key">"status"</span>: <span class="string">"success"</span>,
+    <span class="key">"message"</span>: <span class="string">"Payment retrieved successfully"</span>,
+    <span class="key">"code"</span>: <span class="number">200</span>,
+    <span class="key">"data"</span>: {
+        <span class="key">"id"</span>: <span class="number">1</span>,
+        <span class="key">"order_id"</span>: <span class="number">1</span>,
+        <span class="key">"user_id"</span>: <span class="number">1</span>,
+        <span class="key">"amount"</span>: <span class="number">20.70</span>,
+        <span class="key">"payment_method"</span>: <span class="string">"fpx"</span>,
+        <span class="key">"payment_ref"</span>: <span class="string">"BZ-FPX-20260221143500-A1B2C3D4"</span>,
+        <span class="key">"bank_code"</span>: <span class="string">"MBB"</span>,
+        <span class="key">"status"</span>: <span class="string">"success"</span>,
+        <span class="key">"gateway_response"</span>: <span class="string">"Transaction approved by bank"</span>,
+        <span class="key">"expires_at"</span>: <span class="string">"2026-02-21 14:50:00"</span>,
+        <span class="key">"created_at"</span>: <span class="string">"2026-02-21 14:35:00"</span>,
+        <span class="key">"updated_at"</span>: <span class="string">"2026-02-21 14:36:12"</span>,
+        <span class="key">"order_status"</span>: <span class="string">"paid"</span>
+    }
+}
+                        </div>
+
+                        <h4>Payment Statuses</h4>
+                        <table class="params-table">
+                            <thead><tr><th>Status</th><th>Description</th></tr></thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>pending</code></td>
+                                    <td>Payment created, waiting for user action on gateway page</td>
+                                </tr>
+                                <tr>
+                                    <td><code>processing</code></td>
+                                    <td>User has submitted — bank is processing</td>
+                                </tr>
+                                <tr>
+                                    <td><code>success</code></td>
+                                    <td>Payment completed successfully, order marked as <code>paid</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>failed</code></td>
+                                    <td>Payment was declined or cancelled by user, order marked as <code>cancelled</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>expired</code></td>
+                                    <td>Payment session expired (15 min), order marked as <code>cancelled</code></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- GET /payments -->
+                <div class="endpoint-card">
+                    <div class="endpoint-header" onclick="this.parentElement.classList.toggle('open')">
+                        <span class="method-badge method-get">GET</span>
+                        <span class="endpoint-path">/api/v1/payments</span>
+                        <span class="auth-badge">JWT Token</span>
+                        <span class="endpoint-desc">Get all payments</span>
+                        <iconify-icon class="endpoint-toggle" icon="material-symbols:expand-more-rounded"></iconify-icon>
+                    </div>
+                    <div class="endpoint-body">
+                        <p>Returns all payments for the authenticated user.</p>
+
+                        <h4>Example Request</h4>
+                        <div class="code-block">
+<button class="copy-btn" onclick="copyCode(this)">Copy</button>
+<span class="keyword">GET</span> <span class="url"><?= ROOT ?>/api/v1/payments</span>
+<span class="comment"># Header:</span>
+Authorization: Bearer <span class="string">your_jwt_token</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- POST /payment-callback -->
+                <div class="endpoint-card">
+                    <div class="endpoint-header" onclick="this.parentElement.classList.toggle('open')">
+                        <span class="method-badge method-post">POST</span>
+                        <span class="endpoint-path">/api/v1/payment-callback</span>
+                        <span class="public-badge">Public</span>
+                        <span class="endpoint-desc">Gateway callback (internal)</span>
+                        <iconify-icon class="endpoint-toggle" icon="material-symbols:expand-more-rounded"></iconify-icon>
+                    </div>
+                    <div class="endpoint-body">
+                        <p>Called by the payment gateway simulation page after the user approves or rejects the payment. This endpoint updates the payment and order status. You typically do <strong>not</strong> call this from your mobile app — it is called automatically by the gateway page.</p>
+
+                        <h4>Request Body</h4>
+                        <table class="params-table">
+                            <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>payment_ref</code></td>
+                                    <td>string</td>
+                                    <td><span class="param-required">required</span> Payment reference from initiate response</td>
+                                </tr>
+                                <tr>
+                                    <td><code>status</code></td>
+                                    <td>string</td>
+                                    <td><span class="param-required">required</span> <code>success</code> or <code>failed</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>gateway_response</code></td>
+                                    <td>string</td>
+                                    <td><span class="param-optional">optional</span> Response message from the gateway</td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <h4>Example Request</h4>
+                        <div class="code-block">
+<button class="copy-btn" onclick="copyCode(this)">Copy</button>
+<span class="keyword">POST</span> <span class="url"><?= ROOT ?>/api/v1/payment-callback</span>
+Content-Type: application/json
+
+{
+    <span class="key">"payment_ref"</span>: <span class="string">"BZ-FPX-20260221143500-A1B2C3D4"</span>,
+    <span class="key">"status"</span>: <span class="string">"success"</span>,
+    <span class="key">"gateway_response"</span>: <span class="string">"Transaction approved by bank"</span>
+}
+                        </div>
+
+                        <h4>Response</h4>
+                        <div class="response-label response-success">200 OK</div>
+                        <div class="code-block">
+{
+    <span class="key">"status"</span>: <span class="string">"success"</span>,
+    <span class="key">"message"</span>: <span class="string">"Payment successful"</span>,
+    <span class="key">"code"</span>: <span class="number">200</span>,
+    <span class="key">"data"</span>: {
+        <span class="key">"payment_id"</span>: <span class="number">1</span>,
+        <span class="key">"payment_ref"</span>: <span class="string">"BZ-FPX-20260221143500-A1B2C3D4"</span>,
+        <span class="key">"status"</span>: <span class="string">"success"</span>,
+        <span class="key">"order_id"</span>: <span class="number">1</span>,
+        <span class="key">"order_status"</span>: <span class="string">"paid"</span>,
+        <span class="key">"gateway_response"</span>: <span class="string">"Transaction approved by bank"</span>,
+        <span class="key">"processed_at"</span>: <span class="string">"2026-02-21 14:36:12"</span>
+    }
+}
+                        </div>
+
+                        <h4>Error Responses</h4>
+                        <div class="response-label response-error">409 Conflict</div>
+                        <p>Payment has already been processed.</p>
+                        <div class="response-label response-error">410 Gone</div>
+                        <p>Payment session has expired.</p>
                     </div>
                 </div>
             </section>

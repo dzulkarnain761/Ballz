@@ -41,6 +41,8 @@ define('API_PUBLIC_ENDPOINTS', [
     'outlets',
     'vouchers',
     'rewards',
+    'payment-methods',
+    'payment-callback',
 ]);
 
 /**
@@ -54,6 +56,7 @@ define('JWT_PROTECTED_ENDPOINTS', [
     'users',
     'orders',
     'reward-transactions',
+    'payments',
 ]);
 
 // Endpoints that are auth endpoints (require API key, issue JWT)

@@ -10,6 +10,7 @@ class v1 extends Api
     private $userModel;
     private $rewardModel;
     private $orderModel;
+    private $paymentModel;
 
     public function __construct()
     {
@@ -51,6 +52,7 @@ class v1 extends Api
         $this->userModel = new UserModel();
         $this->rewardModel = new RewardModel();
         $this->orderModel = new OrderModel();
+        $this->paymentModel = new PaymentModel();
     }
 
     /**
@@ -77,6 +79,12 @@ class v1 extends Api
                 break;
             case 'users':
                 $this->getUsersData();
+                break;
+            case 'payments':
+                $this->getPaymentsData();
+                break;
+            case 'payment-methods':
+                $this->getPaymentMethods();
                 break;
             default:
                 $this->sendError('Endpoint not found', 404);
@@ -118,6 +126,9 @@ class v1 extends Api
                 break;
             case 'users':
                 $this->getUser($resourceId);
+                break;
+            case 'payments':
+                $this->getPayment($resourceId);
                 break;
             default:
                 $this->sendError('Endpoint not found', 404);
@@ -702,6 +713,12 @@ class v1 extends Api
             case 'reward-transactions':
                 $this->handleCreateRewardTransaction();
                 break;
+            case 'payments':
+                $this->handleInitiatePayment();
+                break;
+            case 'payment-callback':
+                $this->handlePaymentCallback();
+                break;
             default:
                 $this->sendError('POST method not implemented for ' . $endpoint, 501);
         }
@@ -1197,6 +1214,317 @@ class v1 extends Api
 
         } catch (Exception $e) {
             $this->sendError('Failed to create order: ' . $e->getMessage(), 500);
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // PAYMENT GATEWAY SIMULATION (FPX / DuitNow)
+    // ═══════════════════════════════════════════════════════════════
+
+    /**
+     * FPX Bank list for simulation
+     */
+    private function getFpxBanks()
+    {
+        return [
+            ['code' => 'MBB',  'name' => 'Maybank2u',          'status' => 'online'],
+            ['code' => 'CIMB', 'name' => 'CIMB Clicks',         'status' => 'online'],
+            ['code' => 'PBB',  'name' => 'Public Bank',         'status' => 'online'],
+            ['code' => 'RHB',  'name' => 'RHB Now',             'status' => 'online'],
+            ['code' => 'HLB',  'name' => 'Hong Leong Connect',  'status' => 'online'],
+            ['code' => 'AMB',  'name' => 'AmOnline',            'status' => 'online'],
+            ['code' => 'BIMB', 'name' => 'Bank Islam',          'status' => 'online'],
+            ['code' => 'BSN',  'name' => 'BSN',                 'status' => 'online'],
+            ['code' => 'OCBC', 'name' => 'OCBC Bank',           'status' => 'online'],
+            ['code' => 'UOB',  'name' => 'UOB Bank',            'status' => 'online'],
+            ['code' => 'HSBC', 'name' => 'HSBC Bank',           'status' => 'offline'],
+            ['code' => 'SCB',  'name' => 'Standard Chartered',  'status' => 'offline'],
+        ];
+    }
+
+    /**
+     * GET /api/v1/payment-methods - Get available payment methods & FPX bank list
+     * Public endpoint - no auth required
+     */
+    private function getPaymentMethods()
+    {
+        $response = [
+            'payment_methods' => [
+                [
+                    'code' => 'fpx',
+                    'name' => 'FPX Online Banking',
+                    'description' => 'Pay using your bank\'s online banking',
+                    'icon' => 'fpx',
+                    'banks' => $this->getFpxBanks()
+                ],
+                [
+                    'code' => 'duitnow',
+                    'name' => 'DuitNow QR',
+                    'description' => 'Scan & pay with any DuitNow-supported banking app',
+                    'icon' => 'duitnow',
+                    'banks' => [] // DuitNow doesn't need bank selection
+                ]
+            ]
+        ];
+        $this->sendResponse($response, 'Payment methods retrieved successfully');
+    }
+
+    /**
+     * GET /api/v1/payments - Get all payments (admin) or user payments
+     */
+    private function getPaymentsData()
+    {
+        try {
+            // If authenticated user, show their payments only
+            $userId = $this->getAuthenticatedUserId();
+            if ($userId) {
+                $payments = $this->paymentModel->getByUserId($userId);
+            } else {
+                $payments = $this->paymentModel->getAll();
+            }
+            $this->sendResponse($payments ?? [], 'Payments retrieved successfully');
+        } catch (Exception $e) {
+            $this->sendError('Failed to retrieve payments: ' . $e->getMessage(), 500);
+        }
+    }
+
+    /**
+     * GET /api/v1/payments/{id} - Get payment status by ID
+     * Mobile app polls this to check payment result
+     * 
+     * @param int $paymentId
+     */
+    private function getPayment($paymentId)
+    {
+        try {
+            $payment = $this->paymentModel->getById($paymentId);
+
+            if (!$payment) {
+                $this->sendError('Payment not found', 404);
+                return;
+            }
+
+            // Check if payment has expired
+            if (in_array($payment['status'], ['pending', 'processing']) && strtotime($payment['expires_at']) < time()) {
+                $this->paymentModel->updateStatus($payment['id'], 'expired');
+                $this->orderModel->updateStatus($payment['order_id'], 'cancelled');
+                $payment['status'] = 'expired';
+            }
+
+            $this->sendResponse($payment, 'Payment retrieved successfully');
+        } catch (Exception $e) {
+            $this->sendError('Failed to retrieve payment: ' . $e->getMessage(), 500);
+        }
+    }
+
+    /**
+     * POST /api/v1/payments - Initiate a payment
+     * 
+     * Request body:
+     * {
+     *   "order_id": 1,                              (required)
+     *   "payment_method": "fpx" | "duitnow",        (required)
+     *   "bank_code": "MBB"                           (required for FPX, optional for DuitNow)
+     * }
+     * 
+     * Response:
+     * {
+     *   "payment_id": 1,
+     *   "payment_ref": "BZ-FPX-20260221...",
+     *   "payment_url": "https://..../payment/gateway?ref=...",
+     *   "status": "pending",
+     *   "expires_at": "2026-02-21 15:30:00"
+     * }
+     */
+    private function handleInitiatePayment()
+    {
+        try {
+            $data = $this->getRequestData();
+
+            // ── Validate required fields ──
+            if (empty($data['order_id'])) {
+                $this->sendError('order_id is required', 400);
+                return;
+            }
+
+            $validMethods = ['fpx', 'duitnow'];
+            if (empty($data['payment_method']) || !in_array($data['payment_method'], $validMethods)) {
+                $this->sendError('payment_method is required and must be "fpx" or "duitnow"', 400);
+                return;
+            }
+
+            $paymentMethod = $data['payment_method'];
+
+            // FPX requires bank_code
+            if ($paymentMethod === 'fpx') {
+                if (empty($data['bank_code'])) {
+                    $this->sendError('bank_code is required for FPX payments', 400);
+                    return;
+                }
+                // Validate bank code
+                $validBanks = array_column($this->getFpxBanks(), 'code');
+                if (!in_array($data['bank_code'], $validBanks)) {
+                    $this->sendError('Invalid bank_code. Use GET /api/v1/payment-methods for available banks.', 400);
+                    return;
+                }
+                // Check bank is online
+                $banks = $this->getFpxBanks();
+                foreach ($banks as $bank) {
+                    if ($bank['code'] === $data['bank_code'] && $bank['status'] === 'offline') {
+                        $this->sendError('Selected bank is currently offline. Please try another bank.', 503);
+                        return;
+                    }
+                }
+            }
+
+            // ── Validate order exists ──
+            $order = $this->orderModel->getById($data['order_id']);
+            if (!$order) {
+                $this->sendError('Order not found', 404);
+                return;
+            }
+
+            // ── Validate order is in pending status ──
+            if ($order['status'] !== 'pending') {
+                $this->sendError('Order is not in pending status. Current status: ' . $order['status'], 400);
+                return;
+            }
+
+            // ── Check for existing successful payment ──
+            if ($this->paymentModel->hasSuccessfulPayment($data['order_id'])) {
+                $this->sendError('Order has already been paid', 409);
+                return;
+            }
+
+            // ── Expire any existing pending payments for this order ──
+            $activePayment = $this->paymentModel->getActivePayment($data['order_id']);
+            if ($activePayment) {
+                $this->paymentModel->updateStatus($activePayment['id'], 'expired', 'Superseded by new payment attempt');
+            }
+
+            // ── Generate payment reference ──
+            $paymentRef = PaymentModel::generatePaymentRef($paymentMethod);
+            $expiresAt = date('Y-m-d H:i:s', strtotime('+15 minutes'));
+
+            // ── Create payment record ──
+            $paymentId = $this->paymentModel->create([
+                'order_id' => $data['order_id'],
+                'user_id' => $order['user_id'],
+                'amount' => $order['final_total'],
+                'payment_method' => $paymentMethod,
+                'payment_ref' => $paymentRef,
+                'bank_code' => $data['bank_code'] ?? null,
+                'expires_at' => $expiresAt
+            ]);
+
+            if (!$paymentId) {
+                $this->sendError('Failed to create payment', 500);
+                return;
+            }
+
+            // ── Build payment URL (simulation page) ──
+            $paymentUrl = ROOT . '/payment/gateway?ref=' . urlencode($paymentRef);
+
+            $response = [
+                'payment_id' => (int)$paymentId,
+                'payment_ref' => $paymentRef,
+                'payment_method' => $paymentMethod,
+                'bank_code' => $data['bank_code'] ?? null,
+                'amount' => (float)$order['final_total'],
+                'currency' => 'MYR',
+                'payment_url' => $paymentUrl,
+                'status' => 'pending',
+                'expires_at' => $expiresAt
+            ];
+
+            $this->sendCreated($response, 'Payment initiated successfully');
+
+        } catch (Exception $e) {
+            $this->sendError('Failed to initiate payment: ' . $e->getMessage(), 500);
+        }
+    }
+
+    /**
+     * POST /api/v1/payment-callback - Gateway callback (called by simulation page)
+     * This simulates the payment gateway callback after user approves/rejects
+     * 
+     * Request body:
+     * {
+     *   "payment_ref": "BZ-FPX-20260221...",    (required)
+     *   "status": "success" | "failed",          (required)
+     *   "gateway_response": "Approved"           (optional)
+     * }
+     */
+    private function handlePaymentCallback()
+    {
+        try {
+            $data = $this->getRequestData();
+
+            if (empty($data['payment_ref'])) {
+                $this->sendError('payment_ref is required', 400);
+                return;
+            }
+
+            $validStatuses = ['success', 'failed'];
+            if (empty($data['status']) || !in_array($data['status'], $validStatuses)) {
+                $this->sendError('status is required and must be "success" or "failed"', 400);
+                return;
+            }
+
+            // Find payment
+            $payment = $this->paymentModel->getByRef($data['payment_ref']);
+            if (!$payment) {
+                $this->sendError('Payment not found', 404);
+                return;
+            }
+
+            // Check payment hasn't already been processed
+            if (!in_array($payment['status'], ['pending', 'processing'])) {
+                $this->sendError('Payment has already been processed. Status: ' . $payment['status'], 409);
+                return;
+            }
+
+            // Check if payment has expired
+            if (strtotime($payment['expires_at']) < time()) {
+                $this->paymentModel->updateStatus($payment['id'], 'expired');
+                $this->orderModel->updateStatus($payment['order_id'], 'cancelled');
+                $this->sendError('Payment has expired', 410);
+                return;
+            }
+
+            $newStatus = $data['status'];
+            $gatewayResponse = $data['gateway_response'] ?? ($newStatus === 'success' ? 'Transaction approved' : 'Transaction declined by user');
+
+            // ── Simulate processing delay (mark as processing briefly) ──
+            $this->paymentModel->updateStatus($payment['id'], 'processing');
+
+            // ── Update payment status ──
+            $this->paymentModel->updateStatus($payment['id'], $newStatus, $gatewayResponse);
+
+            // ── Update order status based on payment result ──
+            if ($newStatus === 'success') {
+                $this->orderModel->updateStatus($payment['order_id'], 'paid');
+            } else {
+                $this->orderModel->updateStatus($payment['order_id'], 'cancelled');
+            }
+
+            // ── Fetch updated payment ──
+            $updatedPayment = $this->paymentModel->getById($payment['id']);
+
+            $response = [
+                'payment_id' => (int)$payment['id'],
+                'payment_ref' => $payment['payment_ref'],
+                'status' => $newStatus,
+                'order_id' => (int)$payment['order_id'],
+                'order_status' => $newStatus === 'success' ? 'paid' : 'cancelled',
+                'gateway_response' => $gatewayResponse,
+                'processed_at' => date('Y-m-d H:i:s')
+            ];
+
+            $this->sendResponse($response, 'Payment ' . ($newStatus === 'success' ? 'successful' : 'failed'));
+
+        } catch (Exception $e) {
+            $this->sendError('Payment callback failed: ' . $e->getMessage(), 500);
         }
     }
 
