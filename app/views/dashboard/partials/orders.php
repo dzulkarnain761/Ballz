@@ -28,7 +28,7 @@
                         <td><?= htmlspecialchars($order['user_name'] ?? 'Guest') ?></td>
                         <td><?= htmlspecialchars($order['outlet_name']) ?></td>
                         <td>RM<?= number_format($order['final_total'], 2) ?></td>
-                        <td><?= ucfirst($order['order_type']) ?> <?= $order['table_number'] ? '(Table '.$order['table_number'].')' : '' ?></td>
+                        <td><?= ucfirst($order['order_type']) ?> </td>
                         <td>
                             <?php
                                 $statusClass = 'badge-danger';

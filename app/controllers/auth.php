@@ -58,7 +58,6 @@ class Auth extends Controller
 
     public function logout()
     {
-      
         session_destroy();
         $_SESSION['success'] = 'You have been logged out';
         redirect("auth/login");

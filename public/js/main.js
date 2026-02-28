@@ -36,24 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Menu Tab Switching
-    const toggleBtns = document.querySelectorAll('.toggle-btn');
-    const menuGrids = document.querySelectorAll('.menu-grid');
 
-    toggleBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            // Remove active class from all buttons and grids
-            toggleBtns.forEach(b => b.classList.remove('active'));
-            menuGrids.forEach(g => g.classList.remove('active'));
-
-            // Add active class to clicked button
-            btn.classList.add('active');
-
-            // Show corresponding grid
-            const target = btn.getAttribute('data-target');
-            document.getElementById(target).classList.add('active');
-        });
-    });
 
     // Theme Toggle
     const themeToggle = document.getElementById('theme-toggle');
@@ -91,7 +74,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }, { threshold: 0.1 });
 
     // Observe elements for scroll reveal
-    document.querySelectorAll('.feature-card, .menu-item-card, .app-feature, .about-stat, .hero-stat').forEach(el => {
+    document.querySelectorAll('.feature-card, .menu-item-card, .menu-card, .app-feature, .about-stat, .hero-stat').forEach(el => {
         el.style.opacity = '0';
         el.style.transform = 'translateY(20px)';
         el.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
@@ -107,7 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const staggerObserver = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
-                const children = entry.target.querySelectorAll('.feature-card, .menu-item-card, .about-stat');
+                const children = entry.target.querySelectorAll('.feature-card, .menu-item-card, .menu-card, .about-stat');
                 children.forEach((child, i) => {
                     setTimeout(() => child.classList.add('visible'), i * 100);
                 });
@@ -116,9 +99,45 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }, { threshold: 0.1 });
 
-    document.querySelectorAll('.features-grid, .menu-grid, .about-stats').forEach(grid => {
+    document.querySelectorAll('.features-grid, .menu-showcase, .menu-grid, .about-stats').forEach(grid => {
         staggerObserver.observe(grid);
     });
+
+    // Menu Page — Category Filter
+    const filterBtns = document.querySelectorAll('.menu-filter-btn');
+    const menuGrid = document.getElementById('menuGrid');
+    const filterEmpty = document.getElementById('menuFilterEmpty');
+
+    if (filterBtns.length && menuGrid) {
+        filterBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                // Update active button
+                filterBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+
+                const category = btn.dataset.category;
+                const cards = menuGrid.querySelectorAll('.menu-card');
+                let visibleCount = 0;
+
+                cards.forEach((card, i) => {
+                    const match = category === 'all' || card.dataset.category === category;
+                    card.style.display = match ? '' : 'none';
+                    if (match) {
+                        visibleCount++;
+                        // Re-trigger entrance animation
+                        card.style.animation = 'none';
+                        card.offsetHeight; // reflow
+                        card.style.animation = `fadeInUp 0.4s ease ${i * 0.05}s both`;
+                    }
+                });
+
+                // Show/hide empty state
+                if (filterEmpty) {
+                    filterEmpty.style.display = visibleCount === 0 ? 'block' : 'none';
+                }
+            });
+        });
+    }
 
     // Sidebar Dropdown Toggle
     document.querySelectorAll('.sidebar-nav .dropdown .menu-header').forEach(toggle => {

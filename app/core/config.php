@@ -1,29 +1,21 @@
 <?php
-$serverName = $_SERVER['SERVER_NAME'];
-$isNgrok = (strpos($serverName, 'ngrok') !== false);
-$isDevelopment = ($serverName == 'localhost' || $serverName == '127.0.0.1' || strpos($serverName, '192.168.') === 0);
+// Detect environment automatically
+$isDevelopment = ($_SERVER['HTTP_HOST'] === 'localhost' || $_SERVER['HTTP_HOST'] === '127.0.0.1');
 
-if ($isDevelopment) {
-    define('DB_HOST', 'localhost');
-    define('DB_USER', 'root');
-    define('DB_PASS', '');
-    define('DB_NAME', 'ballz');
-    define('ROOT', 'http://' . $serverName . '/Ballz');
-} elseif ($isNgrok) {
-    // Ngrok tunneling - use local database but ngrok URL
-    // Always use HTTPS for ngrok (ngrok terminates SSL, so $_SERVER['HTTPS'] may not be set)
-    define('DB_HOST', 'localhost');
-    define('DB_USER', 'root');
-    define('DB_PASS', '');
-    define('DB_NAME', 'ballz');
-    define('ROOT', 'https://' . $serverName . '/Ballz');
-} else {
-    define('DB_HOST', $serverName);
-    define('DB_USER', 'root');
-    define('DB_PASS', '');
-    define('DB_NAME', 'ballz');
-    define('ROOT', 'https://yourdomain.com/Ballz');
-}
+// Database configuration (usually same for XAMPP)
+define('DB_HOST', 'localhost');
+define('DB_USER', 'root');
+define('DB_PASS', '');
+define('DB_NAME', 'ballz');
+
+// Detect protocol properly (important behind Cloudflare Tunnel)
+$protocol = (
+    (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ||
+    (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https')
+) ? "https://" : "http://";
+
+// Define root dynamically
+define('ROOT', $protocol . $_SERVER['HTTP_HOST'] . '/Ballz');
 
 /**
  * API Key Configuration

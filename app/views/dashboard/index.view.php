@@ -38,6 +38,13 @@
                     ?>
                 </div>
                 <div class="header-actions">
+                    <!-- api documentation -->
+                    <a href="<?= ROOT ?>/api/documentation" class="header-link" title="API Documentation">
+                        <iconify-icon icon="material-symbols:book-outline-rounded"></iconify-icon>
+                    </a>
+                    <a href="<?= ROOT ?>/api/test" class="header-link" title="API Test">
+                        <iconify-icon icon="material-symbols:api-rounded"></iconify-icon>
+                    </a>
                     <a href="<?= ROOT ?>/" class="header-link" title="View site">
                         <iconify-icon icon="material-symbols:open-in-new-rounded"></iconify-icon>
                     </a>

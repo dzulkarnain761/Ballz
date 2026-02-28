@@ -28,9 +28,9 @@
                     <iconify-icon icon="material-symbols:menu-rounded"></iconify-icon>
                 </button>
                 <ul class="nav-list" id="navList">
-                    <li><a href="#menu">Menu</a></li>
-                    <li><a href="#app">Get App</a></li>
-                    <li><a href="#about">About</a></li>
+                    <li><a href="<?= ROOT ?>">Home</a></li>
+                    <li><a href="<?= ROOT ?>/menu">Menu</a></li>
+                  
                     <li><a href="<?= ROOT ?>/dashboard/index">Dashboard</a></li>
                     <li><button id="theme-toggle" class="theme-toggle" aria-label="Toggle Dark Mode"><iconify-icon icon="material-symbols:dark-mode-outline"></iconify-icon></button></li>
                 </ul>
@@ -105,13 +105,7 @@
                         <h3>Made to Order</h3>
                         <p>Fried fresh, never pre-made. Crispy, hot, and perfect every time.</p>
                     </div>
-                    <div class="feature-card">
-                        <div class="feature-icon feature-icon-yellow">
-                            <iconify-icon icon="material-symbols:delivery-dining-rounded"></iconify-icon>
-                        </div>
-                        <h3>Fast Delivery</h3>
-                        <p>Order through our app and get your Ballz delivered in minutes.</p>
-                    </div>
+                    
                     <div class="feature-card">
                         <div class="feature-icon feature-icon-green">
                             <iconify-icon icon="material-symbols:loyalty-rounded"></iconify-icon>
@@ -123,133 +117,7 @@
             </div>
         </section>
 
-        <!-- Menu Section -->
-        <section id="menu" class="menu-section">
-            <div class="container">
-                <span class="section-label">The Menu</span>
-                <h2 class="section-title">Our Ballz</h2>
-                <div class="menu-toggle">
-                    <button class="toggle-btn active" data-target="savory">
-                        <iconify-icon icon="material-symbols:local-pizza-rounded"></iconify-icon>
-                        Savory
-                    </button>
-                    <button class="toggle-btn" data-target="sweet">
-                        <iconify-icon icon="material-symbols:cake-rounded"></iconify-icon>
-                        Sweet
-                    </button>
-                </div>
-
-                <div class="menu-grid active" id="savory">
-                    <div class="menu-item-card">
-                        <div class="menu-item-img-wrapper">
-                            <img src="<?= ROOT ?>/public/assets/classic-cheese-bomb.png" alt="Classic Cheese Bomb" class="menu-item-img">
-                            <span class="menu-item-badge">Bestseller</span>
-                        </div>
-                        <div class="menu-item-content">
-                            <h3 class="menu-item-title">Classic Cheese Bomb</h3>
-                            <p class="menu-item-desc">Crispy golden ball filled with molten mozzarella and cheddar, served with marinara sauce.</p>
-                            <div class="menu-item-footer">
-                                <span class="menu-item-price">RM8.90</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="menu-item-card">
-                        <div class="menu-item-img-wrapper">
-                            <img src="<?= ROOT ?>/public/assets/placeholder_food.png" alt="Mac & Cheese Truffle Bites" class="menu-item-img">
-                            <span class="menu-item-badge menu-item-badge-new">New</span>
-                        </div>
-                        <div class="menu-item-content">
-                            <h3 class="menu-item-title">Mac & Cheese Truffle Bites</h3>
-                            <p class="menu-item-desc">Rich mac and cheese rolled into balls, panko-crusted, drizzled with truffle oil.</p>
-                            <div class="menu-item-footer">
-                                <span class="menu-item-price">RM10.90</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="menu-item-card">
-                        <div class="menu-item-img-wrapper">
-                            <img src="<?= ROOT ?>/public/assets/placeholder_food.png" alt="Spicy Arancini" class="menu-item-img">
-                            <span class="menu-item-badge menu-item-badge-spicy">
-                                <iconify-icon icon="material-symbols:local-fire-department-rounded"></iconify-icon> Spicy
-                            </span>
-                        </div>
-                        <div class="menu-item-content">
-                            <h3 class="menu-item-title">Spicy Arancini</h3>
-                            <p class="menu-item-desc">Risotto balls with fiery nduja sausage and provolone, served with roasted pepper aioli.</p>
-                            <div class="menu-item-footer">
-                                <span class="menu-item-price">RM9.90</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="menu-item-card">
-                        <div class="menu-item-img-wrapper">
-                            <img src="<?= ROOT ?>/public/assets/placeholder_food.png" alt="Buffalo Chicken Poppers" class="menu-item-img">
-                        </div>
-                        <div class="menu-item-content">
-                            <h3 class="menu-item-title">Buffalo Chicken Poppers</h3>
-                            <p class="menu-item-desc">Spicy shredded chicken and cream cheese balls, served with ranch dip.</p>
-                            <div class="menu-item-footer">
-                                <span class="menu-item-price">RM9.50</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="menu-grid" id="sweet">
-                    <div class="menu-item-card">
-                        <div class="menu-item-img-wrapper">
-                            <img src="<?= ROOT ?>/public/assets/placeholder_food.png" alt="Nutella Delight" class="menu-item-img">
-                            <span class="menu-item-badge">Bestseller</span>
-                        </div>
-                        <div class="menu-item-content">
-                            <h3 class="menu-item-title">Nutella Delight</h3>
-                            <p class="menu-item-desc">Warm brioche ball injected with rich Nutella, dusted with powdered sugar.</p>
-                            <div class="menu-item-footer">
-                                <span class="menu-item-price">RM7.90</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="menu-item-card">
-                        <div class="menu-item-img-wrapper">
-                            <img src="<?= ROOT ?>/public/assets/placeholder_food.png" alt="Salted Caramel Crunch" class="menu-item-img">
-                        </div>
-                        <div class="menu-item-content">
-                            <h3 class="menu-item-title">Salted Caramel Crunch</h3>
-                            <p class="menu-item-desc">Fried dough ball filled with salted caramel cream, topped with pretzel bits.</p>
-                            <div class="menu-item-footer">
-                                <span class="menu-item-price">RM8.50</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="menu-item-card">
-                        <div class="menu-item-img-wrapper">
-                            <img src="<?= ROOT ?>/public/assets/placeholder_food.png" alt="Berry Bliss Bomboloni" class="menu-item-img">
-                            <span class="menu-item-badge menu-item-badge-new">New</span>
-                        </div>
-                        <div class="menu-item-content">
-                            <h3 class="menu-item-title">Berry Bliss Bomboloni</h3>
-                            <p class="menu-item-desc">Italian doughnut hole filled with fresh berry compote and mascarpone.</p>
-                            <div class="menu-item-footer">
-                                <span class="menu-item-price">RM8.90</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="menu-item-card">
-                        <div class="menu-item-img-wrapper">
-                            <img src="<?= ROOT ?>/public/assets/cinnamon-sugar-bites.png" alt="Cinnamon Sugar Bites" class="menu-item-img">
-                        </div>
-                        <div class="menu-item-content">
-                            <h3 class="menu-item-title">Cinnamon Sugar Bites</h3>
-                            <p class="menu-item-desc">Classic fluffy dough balls coated in cinnamon sugar, served with vanilla glaze.</p>
-                            <div class="menu-item-footer">
-                                <span class="menu-item-price">RM7.50</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
+       
         <!-- App Download Section -->
         <section id="app" class="app-section">
             <div class="container">
@@ -289,47 +157,18 @@
                         </div>
                         <div class="app-download-actions">
                             <a href="#" class="btn btn-primary btn-lg btn-download">
-                                <iconify-icon icon="material-symbols:android-rounded"></iconify-icon>
-                                Download APK
+                                <iconify-icon icon="bi:apple"></iconify-icon>
+                                Download on iOS
                             </a>
-                            <div class="app-download-info">
-                                <iconify-icon icon="material-symbols:verified-rounded"></iconify-icon>
-                                <span>v2.1.0 &bull; 24MB &bull; Android 8.0+</span>
-                            </div>
+                            <a href="#" class="btn btn-outline btn-lg btn-download btn-download-android">
+                                <iconify-icon icon="bi:android"></iconify-icon>
+                                Download on Android
+                            </a>
                         </div>
                     </div>
                     <div class="app-visual">
                         <div class="phone-mockup">
-                            <div class="phone-frame">
-                                <div class="phone-notch"></div>
-                                <div class="phone-screen">
-                                    <div class="phone-screen-header">
-                                        <img src="<?= ROOT ?>/public/assets/logo-light-removebg-preview.png" alt="Ballz" class="phone-logo">
-                                    </div>
-                                    <div class="phone-screen-hero">
-                                        <span class="phone-greeting">Hey there! 👋</span>
-                                        <span class="phone-tagline">What are you craving?</span>
-                                    </div>
-                                    <div class="phone-screen-cards">
-                                        <div class="phone-card">
-                                            <div class="phone-card-img"></div>
-                                            <span>Cheese Bomb</span>
-                                            <span class="phone-card-price">RM8.90</span>
-                                        </div>
-                                        <div class="phone-card">
-                                            <div class="phone-card-img phone-card-img-2"></div>
-                                            <span>Nutella Delight</span>
-                                            <span class="phone-card-price">RM7.90</span>
-                                        </div>
-                                    </div>
-                                    <div class="phone-screen-nav">
-                                        <iconify-icon icon="material-symbols:home-rounded"></iconify-icon>
-                                        <iconify-icon icon="material-symbols:search-rounded"></iconify-icon>
-                                        <iconify-icon icon="material-symbols:shopping-bag-rounded" class="phone-nav-active"></iconify-icon>
-                                        <iconify-icon icon="material-symbols:person-rounded"></iconify-icon>
-                                    </div>
-                                </div>
-                            </div>
+                            <img src="<?= ROOT ?>/public/assets/iphone17.png"  alt="Ballz App on iPhone" class="iphone-mockup-img">
                             <div class="phone-glow"></div>
                         </div>
                     </div>

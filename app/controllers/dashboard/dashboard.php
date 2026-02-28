@@ -1,11 +1,14 @@
-
 <?php
 
 class Dashboard extends Controller
 {
     public function __construct()
     {
-      
+
+        if (!isGuest() && !isAdmin()) {
+            redirect('auth/login');
+            exit;
+        }
     }
 
     /**

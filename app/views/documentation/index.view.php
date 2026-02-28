@@ -35,6 +35,35 @@
             height: 100vh;
             overflow-y: auto;
             transition: background-color 0.3s ease, border-color 0.3s ease;
+            scrollbar-width: thin;
+            scrollbar-color: transparent transparent;
+        }
+
+        .docs-sidebar:hover {
+            scrollbar-color: var(--color-primary) transparent;
+        }
+
+        /* Webkit scrollbar styling */
+        .docs-sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .docs-sidebar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .docs-sidebar::-webkit-scrollbar-thumb {
+            background: transparent;
+            border-radius: 3px;
+            transition: background 0.3s ease;
+        }
+
+        .docs-sidebar:hover::-webkit-scrollbar-thumb {
+            background: var(--color-primary);
+        }
+
+        .docs-sidebar:hover::-webkit-scrollbar-thumb:hover {
+            background: var(--color-secondary);
         }
 
         .docs-sidebar-header {
@@ -664,7 +693,10 @@
                     <a href="<?= ROOT ?>/" class="docs-nav-link">
                         <iconify-icon icon="material-symbols:home-outline-rounded"></iconify-icon> Home
                     </a>
-                    <a href="<?= ROOT ?>/dashboard" class="docs-nav-link">
+                    <a href="<?= ROOT ?>/api/test" class="docs-nav-link">
+                        <iconify-icon icon="material-symbols:api-rounded"></iconify-icon> API Test
+                    </a>
+                    <a href="<?= ROOT ?>/dashboard/index" class="docs-nav-link">
                         <iconify-icon icon="material-symbols:dashboard-outline-rounded"></iconify-icon> Dashboard
                     </a>
                 </div>
